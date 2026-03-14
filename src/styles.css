@@ -1,0 +1,105 @@
+@import "tailwindcss";
+
+/* Base node card styling */
+.flow-node {
+  transition: box-shadow 0.3s, border-color 0.3s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.06);
+}
+
+/* Title typography */
+h1.text-2xl {
+  letter-spacing: -0.02em;
+}
+
+/* Status pill */
+.status-pill {
+  font-size: 0.65rem;
+  line-height: 1.2;
+  padding: 3px 8px;
+  border-radius: 9999px;
+  white-space: nowrap;
+  margin-top: 4px;
+  display: block;
+  text-align: center;
+  min-height: 1em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color 0.15s, background-color 0.15s;
+}
+
+/* Ghost node inline status text */
+.status-pill-anno {
+  font-size: 0.65rem;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  transition: color 0.15s;
+}
+
+/* SVG overlay */
+.svg-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  overflow: visible;
+}
+
+/* Tooltip */
+.flow-tooltip {
+  position: absolute;
+  pointer-events: none;
+  z-index: 50;
+  white-space: nowrap;
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 4px 12px;
+  border-radius: 8px;
+  opacity: 0;
+  transform: translateY(4px);
+}
+
+/* Slide-out wrapper (header + card) */
+.flow-slideout-wrapper {
+  position: absolute;
+  pointer-events: none;
+  z-index: 40;
+  opacity: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.flow-slideout-header {
+  font-size: 0.6rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding-left: 2px;
+  opacity: 0.7;
+}
+
+/* Slide-out card */
+.flow-slideout {
+  white-space: nowrap;
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 8px 14px;
+  border-radius: 10px;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.flow-slideout-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.flow-slideout-time {
+  font-size: 0.6rem;
+  font-weight: 400;
+  opacity: 0.55;
+}
