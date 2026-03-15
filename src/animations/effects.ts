@@ -110,6 +110,73 @@ export function fadeIn(
   tl.fromTo(nodeEl, { opacity: 0, y }, { opacity: 1, y: 0, duration, ease: 'power2.out' }, position)
 }
 
+/** Registry of original stroke/marker state for resetLines */
+const _lineOrigState = new Map<SVGPathElement, { stroke: string; markerEnd: string }>()
+
+/** Ensure an arrowhead marker with the given color exists, return its url() reference */
+function ensureMarkerColor(svg: SVGSVGElement, color: string): string {
+  const markerId = `arrow-${color.replace('#', '')}`
+  if (!svg.querySelector(`#${markerId}`)) {
+    const defs = svg.querySelector('defs')!
+    const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker')
+    marker.setAttribute('id', markerId)
+    marker.setAttribute('viewBox', '0 0 10 10')
+    marker.setAttribute('refX', '9')
+    marker.setAttribute('refY', '5')
+    marker.setAttribute('markerWidth', '6')
+    marker.setAttribute('markerHeight', '6')
+    marker.setAttribute('orient', 'auto-start-reverse')
+    const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon')
+    polygon.setAttribute('points', '0,1 10,5 0,9')
+    polygon.setAttribute('fill', color)
+    marker.appendChild(polygon)
+    defs.appendChild(marker)
+  }
+  return `url(#${markerId})`
+}
+
+/** Change the stroke color of one or more SVG paths on the timeline, including arrowhead markers */
+export function colorLine(
+  tl: gsap.core.Timeline,
+  paths: SVGPathElement | SVGPathElement[],
+  color: string,
+  position?: string | number
+): void {
+  const arr = Array.isArray(paths) ? paths : [paths]
+  tl.call(() => {
+    for (const p of arr) {
+      if (!_lineOrigState.has(p)) {
+        _lineOrigState.set(p, {
+          stroke: p.getAttribute('stroke') || '#cbd5e1',
+          markerEnd: p.getAttribute('marker-end') || '',
+        })
+      }
+      p.setAttribute('stroke', color)
+      // Update arrowhead marker color if present
+      if (p.getAttribute('marker-end')) {
+        const svg = p.closest('svg')!
+        p.setAttribute('marker-end', ensureMarkerColor(svg, color))
+      }
+    }
+  }, [], position)
+}
+
+/** Reset all colored lines back to their original stroke color and markers */
+export function resetLines(
+  tl: gsap.core.Timeline,
+  position?: string | number
+): void {
+  tl.call(() => {
+    for (const [p, orig] of _lineOrigState) {
+      p.setAttribute('stroke', orig.stroke)
+      if (orig.markerEnd) {
+        p.setAttribute('marker-end', orig.markerEnd)
+      }
+    }
+    _lineOrigState.clear()
+  }, [], position)
+}
+
 export function fadeOut(
   tl: gsap.core.Timeline,
   nodeEl: HTMLElement,

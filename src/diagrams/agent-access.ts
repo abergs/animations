@@ -3,7 +3,7 @@ import { createNode as cn } from "../components/node";
 import { layoutRows as lr } from "../components/layout";
 import { createSvgOverlay as csvg, drawArrow as da, drawMergedArrows } from "../components/arrows";
 import { packet as _packet } from "../animations/packet";
-import { highlight as _highlight, pulse as _pulse } from "../animations/effects";
+import { highlight as _highlight, pulse as _pulse, colorLine, resetLines } from "../animations/effects";
 import {
   statusPill as _statusPill,
   slideOut as _slideOut,
@@ -132,6 +132,8 @@ export function agentAccess(container: HTMLElement) {
     // Agents → CLI (converging funnel)
     const merged = drawMergedArrows(svg, [claude, openclaw, buildsh], cli, { color: "#cbd5e1", noArrow: true });
     const [a_claude_cli, a_openclaw_cli, a_buildsh_cli] = merged.paths;
+    const buildshBranch = merged.branches[2]!;
+    const lowerTrunk = merged.lowerTrunk;
 
     // CLI → Proxy → BW (dashed = encrypted tunnel)
     const a_cli_proxy = da(svg, cli, proxy, {
@@ -150,16 +152,19 @@ export function agentAccess(container: HTMLElement) {
 
     // 2. Request: build.sh → CLI
     packet(tl, a_buildsh_cli, { color: "#175DDC", duration: 1.2 });
+    colorLine(tl, [buildshBranch, lowerTrunk], "#175DDC");
     pulse(tl, cli, { color: "#175DDC" });
     statusPill(tl, cli, "Encrypting request");
     tl.to({}, { duration: 0.4 });
 
     // 3. Request: CLI → Proxy
     packet(tl, a_cli_proxy, { color: "#175DDC", duration: 1.4 });
+    colorLine(tl, a_cli_proxy, "#175DDC");
     statusPill(tl, proxy, "Relaying…", { color: "#175DDC" });
 
     // 4. Request: Proxy → BW
     packet(tl, a_proxy_bw, { color: "#175DDC", duration: 1.4 });
+    colorLine(tl, a_proxy_bw, "#175DDC");
     pulse(tl, bw, { color: "#175DDC" });
     statusPill(tl, bw, "build.sh wants github.com");
 
@@ -185,10 +190,12 @@ export function agentAccess(container: HTMLElement) {
 
     // 6. Credential flows back: BW → Proxy
     packet(tl, a_proxy_bw, { color: "#10b981", duration: 1.4, reverse: true });
+    colorLine(tl, a_proxy_bw, "#10b981");
     statusPill(tl, proxy, "Relaying…", { color: "#10b981" });
 
     // 7. Proxy → CLI
     packet(tl, a_cli_proxy, { color: "#10b981", duration: 1.4, reverse: true });
+    colorLine(tl, [a_cli_proxy, lowerTrunk, buildshBranch], "#10b981");
     statusPill(tl, cli, "Decrypting credential", { color: "#10b981" });
     tl.to({}, { duration: 0.4 });
 
@@ -201,8 +208,9 @@ export function agentAccess(container: HTMLElement) {
 
     tl.to({}, { duration: 1.5 });
 
-    // Reset all status pills to initial values before repeat
+    // Reset all status pills and line colors before repeat
     resetStatusPills(tl);
+    resetLines(tl);
 
     tl.play();
   });
