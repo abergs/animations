@@ -11,6 +11,7 @@ export interface ArrowOptions {
   cp1?: { x: number; y: number }
   cp2?: { x: number; y: number }
   label?: string
+  noArrow?: boolean
 }
 
 interface ArrowMeta {
@@ -193,7 +194,6 @@ export function drawArrow(
   const from = getAnchorPoint(fromEl, fromAnchor, container)
   const to = getAnchorPoint(toEl, toAnchor, container)
 
-  const markerId = ensureMarker(svg, color)
   const d = buildPath(from, to, curve, opts.cp1, opts.cp2)
 
   const path = document.createElementNS('http://www.w3.org/2000/svg', 'path')
@@ -202,7 +202,11 @@ export function drawArrow(
   path.setAttribute('stroke-width', String(strokeWidth))
   path.setAttribute('stroke-opacity', '1')
   path.setAttribute('fill', 'none')
-  path.setAttribute('marker-end', `url(#${markerId})`)
+
+  if (!opts.noArrow) {
+    const markerId = ensureMarker(svg, color)
+    path.setAttribute('marker-end', `url(#${markerId})`)
+  }
 
   if (opts.style === 'dashed') {
     path.setAttribute('stroke-dasharray', '8 5')
@@ -237,7 +241,190 @@ export function drawArrow(
   return path
 }
 
+export interface MergedArrowsResult {
+  /** Full invisible paths per source (for packet animation via getPointAtLength) */
+  paths: SVGPathElement[]
+  /** The visible trunk path (center source → target) */
+  trunk: SVGPathElement
+}
+
+/**
+ * Build an orthogonal tributary path with rounded corners.
+ * Goes straight down from src, rounded corner, horizontal to trunk X,
+ * rounded corner, straight down to joinPt.
+ */
+function tributaryPath(
+  src: { x: number; y: number },
+  joinPt: { x: number; y: number },
+  targetPt: { x: number; y: number },
+  radius = 20
+): string {
+  const dx = joinPt.x - src.x
+  const dir = dx > 0 ? 1 : -1 // 1 = source is left of trunk, -1 = right
+  const absDx = Math.abs(dx)
+
+  // Clamp radius so it doesn't exceed available space
+  const dy = joinPt.y - src.y
+  const r = Math.min(radius, absDx, dy / 2)
+
+  // Turn Y: true midpoint between source and target (not joinPt)
+  const turnY = src.y + (targetPt.y - src.y) * 0.5
+
+  // Path: down → round corner → horizontal → round corner → down
+  return [
+    `M ${src.x} ${src.y}`,
+    // Straight down to first corner
+    `L ${src.x} ${turnY - r}`,
+    // Round corner: turning from vertical to horizontal
+    `Q ${src.x} ${turnY}, ${src.x + dir * r} ${turnY}`,
+    // Horizontal to second corner
+    `L ${joinPt.x - dir * r} ${turnY}`,
+    // Round corner: turning from horizontal to vertical
+    `Q ${joinPt.x} ${turnY}, ${joinPt.x} ${turnY + r}`,
+    // Straight down to join point
+    `L ${joinPt.x} ${joinPt.y}`,
+  ].join(' ')
+}
+
+/**
+ * Draw multiple source lines that converge into a single trunk leading to the target.
+ * The center source draws a straight line all the way down (the trunk).
+ * Outer sources draw smooth bezier curves that merge tangentially into the trunk.
+ * Returns invisible full-length paths per source for packet animation.
+ */
+export function drawMergedArrows(
+  svg: SVGSVGElement,
+  sourceEls: HTMLElement[],
+  targetEl: HTMLElement,
+  opts: ArrowOptions = {}
+): MergedArrowsResult {
+  const container = svg.parentElement!
+  const color = opts.color || '#94a3b8'
+  const strokeWidth = opts.strokeWidth || 1.5
+
+  const targetPt = getAnchorPoint(targetEl, opts.toAnchor || 'top', container)
+  const sourcePts = sourceEls.map(el => getAnchorPoint(el, opts.fromAnchor || 'bottom', container))
+
+  // Find the center source (closest X to target)
+  const centerIdx = sourcePts.reduce((best, pt, i) =>
+    Math.abs(pt.x - targetPt.x) < Math.abs(sourcePts[best].x - targetPt.x) ? i : best, 0)
+
+  // Join point for tributaries: on the trunk, 45% of the way from sources to target
+  const maxSourceY = Math.max(...sourcePts.map(p => p.y))
+  const joinY = maxSourceY + (targetPt.y - maxSourceY) * 0.45
+  const joinPt = { x: targetPt.x, y: joinY }
+
+  // --- Visible trunk: center source straight down to target ---
+  const centerPt = sourcePts[centerIdx]
+  const trunkD = `M ${centerPt.x} ${centerPt.y} L ${targetPt.x} ${targetPt.y}`
+  const trunkPath = document.createElementNS('http://www.w3.org/2000/svg', 'path')
+  trunkPath.setAttribute('d', trunkD)
+  trunkPath.setAttribute('stroke', color)
+  trunkPath.setAttribute('stroke-width', String(strokeWidth))
+  trunkPath.setAttribute('fill', 'none')
+  if (!opts.noArrow) {
+    const markerId = ensureMarker(svg, color)
+    trunkPath.setAttribute('marker-end', `url(#${markerId})`)
+  }
+  svg.appendChild(trunkPath)
+  _mergedRegistry.push({ type: 'trunk', index: centerIdx, path: trunkPath, sourceEls, targetEl, opts, container })
+
+  // --- Visible tributary branches (outer sources → join point on trunk) ---
+  for (let i = 0; i < sourceEls.length; i++) {
+    if (i === centerIdx) continue
+    const d = tributaryPath(sourcePts[i], joinPt, targetPt)
+    const branchPath = document.createElementNS('http://www.w3.org/2000/svg', 'path')
+    branchPath.setAttribute('d', d)
+    branchPath.setAttribute('stroke', color)
+    branchPath.setAttribute('stroke-width', String(strokeWidth))
+    branchPath.setAttribute('fill', 'none')
+    svg.appendChild(branchPath)
+    _mergedRegistry.push({ type: 'branch', index: i, path: branchPath, sourceEls, targetEl, opts, container })
+  }
+
+  // --- Invisible full paths per source (for packet animation) ---
+  const fullPaths: SVGPathElement[] = sourceEls.map((srcEl, i) => {
+    const srcPt = sourcePts[i]
+    let fullD: string
+    if (i === centerIdx) {
+      // Center: straight line
+      fullD = `M ${srcPt.x} ${srcPt.y} L ${targetPt.x} ${targetPt.y}`
+    } else {
+      // Tributary curve to join point, then straight down to target
+      fullD = tributaryPath(srcPt, joinPt, targetPt) + ` L ${targetPt.x} ${targetPt.y}`
+    }
+
+    const fullPath = document.createElementNS('http://www.w3.org/2000/svg', 'path')
+    fullPath.setAttribute('d', fullD)
+    fullPath.setAttribute('stroke', 'none')
+    fullPath.setAttribute('fill', 'none')
+
+    const fCard = resolveCard(srcEl)
+    const tCard = resolveCard(targetEl)
+    fullPath.dataset.fromLabel = (fCard.querySelector('.text-sm.font-semibold') as HTMLElement)?.textContent?.trim() || '???'
+    fullPath.dataset.toLabel = (tCard.querySelector('.text-sm.font-semibold') as HTMLElement)?.textContent?.trim() || '???'
+
+    svg.appendChild(fullPath)
+    _mergedRegistry.push({ type: 'full', index: i, path: fullPath, sourceEls, targetEl, opts, container })
+    return fullPath
+  })
+
+  return { paths: fullPaths, trunk: trunkPath }
+}
+
+interface MergedMeta {
+  type: 'branch' | 'trunk' | 'full'
+  index: number
+  path: SVGPathElement
+  sourceEls: HTMLElement[]
+  targetEl: HTMLElement
+  opts: ArrowOptions
+  container: HTMLElement
+}
+
+const _mergedRegistry: MergedMeta[] = []
+
+function redrawMergedArrows(container: HTMLElement): void {
+  const groups = new Map<string, MergedMeta[]>()
+  for (const meta of _mergedRegistry) {
+    if (meta.container !== container) continue
+    const key = meta.sourceEls.map(el => el.id || '').join(',') + '→' + (meta.targetEl.id || '')
+    if (!groups.has(key)) groups.set(key, [])
+    groups.get(key)!.push(meta)
+  }
+
+  for (const metas of groups.values()) {
+    const first = metas[0]
+    const targetPt = getAnchorPoint(first.targetEl, first.opts.toAnchor || 'top', container)
+    const sourcePts = first.sourceEls.map(el => getAnchorPoint(el, first.opts.fromAnchor || 'bottom', container))
+
+    const centerIdx = sourcePts.reduce((best, pt, i) =>
+      Math.abs(pt.x - targetPt.x) < Math.abs(sourcePts[best].x - targetPt.x) ? i : best, 0)
+
+    const maxSourceY = Math.max(...sourcePts.map(p => p.y))
+    const joinY = maxSourceY + (targetPt.y - maxSourceY) * 0.45
+    const joinPt = { x: targetPt.x, y: joinY }
+    const centerPt = sourcePts[centerIdx]
+
+    for (const meta of metas) {
+      if (meta.type === 'trunk') {
+        meta.path.setAttribute('d', `M ${centerPt.x} ${centerPt.y} L ${targetPt.x} ${targetPt.y}`)
+      } else if (meta.type === 'branch') {
+        meta.path.setAttribute('d', tributaryPath(sourcePts[meta.index], joinPt, targetPt))
+      } else if (meta.type === 'full') {
+        if (meta.index === centerIdx) {
+          meta.path.setAttribute('d', `M ${centerPt.x} ${centerPt.y} L ${targetPt.x} ${targetPt.y}`)
+        } else {
+          meta.path.setAttribute('d', tributaryPath(sourcePts[meta.index], joinPt, targetPt) + ` L ${targetPt.x} ${targetPt.y}`)
+        }
+      }
+    }
+  }
+}
+
 export function redrawArrows(svg: SVGSVGElement, container: HTMLElement): void {
+  redrawMergedArrows(container)
+
   for (const meta of arrowRegistry) {
     if (meta.container !== container) continue
 

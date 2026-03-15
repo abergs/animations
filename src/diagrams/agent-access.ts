@@ -1,7 +1,7 @@
 import gsap from "gsap";
 import { createNode as cn } from "../components/node";
 import { layoutRows as lr } from "../components/layout";
-import { createSvgOverlay as csvg, drawArrow as da } from "../components/arrows";
+import { createSvgOverlay as csvg, drawArrow as da, drawMergedArrows } from "../components/arrows";
 import { packet as _packet } from "../animations/packet";
 import { highlight as _highlight, pulse as _pulse } from "../animations/effects";
 import {
@@ -129,10 +129,9 @@ export function agentAccess(container: HTMLElement) {
   requestAnimationFrame(() => {
     const svg = csvg(container);
 
-    // Agents → CLI
-    const a_claude_cli = da(svg, claude, cli, { color: "#cbd5e1" });
-    const a_openclaw_cli = da(svg, openclaw, cli, { color: "#cbd5e1" });
-    const a_buildsh_cli = da(svg, buildsh, cli, { color: "#cbd5e1" });
+    // Agents → CLI (converging funnel)
+    const merged = drawMergedArrows(svg, [claude, openclaw, buildsh], cli, { color: "#cbd5e1", noArrow: true });
+    const [a_claude_cli, a_openclaw_cli, a_buildsh_cli] = merged.paths;
 
     // CLI → Proxy → BW (dashed = encrypted tunnel)
     const a_cli_proxy = da(svg, cli, proxy, {
