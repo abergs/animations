@@ -6,7 +6,7 @@ function resolveCard(el: HTMLElement): HTMLElement {
 }
 
 /** Stores initial status pill state per node for reset */
-const initialPillState = new Map<HTMLElement, { text: string; color: string }>()
+const initialPillState = new Map<HTMLElement, { text: string; color: string; backgroundColor: string }>()
 
 export interface StatusOptions {
   color?: string
@@ -52,6 +52,7 @@ export function statusPill(
       initialPillState.set(nodeEl, {
         text: pill.textContent || '\u00A0',
         color: pill.style.color || '#94a3b8',
+        backgroundColor: pill.style.backgroundColor || 'transparent',
       })
     }
   }
@@ -80,7 +81,7 @@ export function resetStatusPills(tl: gsap.core.Timeline, tlPosition?: string | n
       if (pill) {
         pill.textContent = state.text
         pill.style.color = state.color
-        pill.style.backgroundColor = state.color + '18'
+        pill.style.backgroundColor = state.backgroundColor
       }
       const anno = nodeEl.querySelector('.status-pill-anno') as HTMLElement | null
       if (anno) {
