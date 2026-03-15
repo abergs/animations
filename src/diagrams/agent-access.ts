@@ -143,6 +143,16 @@ export function agentAccess(container: HTMLElement) {
     });
     const a_proxy_bw = da(svg, proxy, bw, { color: "#cbd5e1", style: "dashed", noArrow: true });
 
+    // Combined invisible path CLI→Proxy→BW for smooth packet transit
+    const combinedPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    const d1 = a_cli_proxy.getAttribute("d")!;
+    const d2 = a_proxy_bw.getAttribute("d")!;
+    // Strip the leading "M x y" from the second path so it continues from where the first ends
+    combinedPath.setAttribute("d", d1 + " " + d2.replace(/^M\s*[\d.]+\s+[\d.]+\s*/, ""));
+    combinedPath.setAttribute("stroke", "none");
+    combinedPath.setAttribute("fill", "none");
+    svg.appendChild(combinedPath);
+
     // --- Animation timeline ---
 
     const tl = gsap.timeline({ repeat: -1, repeatDelay: 2 });
@@ -158,14 +168,13 @@ export function agentAccess(container: HTMLElement) {
     statusPill(tl, cli, "Encrypting request");
     tl.to({}, { duration: 0.4 });
 
-    // 3. Request: CLI → Proxy
-    packet(tl, a_cli_proxy, { color: "#175DDC", duration: 1.4 });
-    colorLine(tl, a_cli_proxy, "#175DDC");
-    statusPill(tl, proxy, "Relaying…", { color: "#175DDC" });
-
-    // 4. Request: Proxy → BW
-    packet(tl, a_proxy_bw, { color: "#175DDC", duration: 1.4 });
-    colorLine(tl, a_proxy_bw, "#175DDC");
+    // 3–4. Request flows through: CLI → Proxy → BW (single smooth packet)
+    const tunnelFwdStart = tl.duration();
+    packet(tl, combinedPath, { color: "#175DDC", duration: 2.0 });
+    // Color segments and update statuses at midpoint (when packet passes proxy)
+    colorLine(tl, a_cli_proxy, "#175DDC", tunnelFwdStart + 1.0);
+    statusPill(tl, proxy, "Relaying…", { color: "#175DDC" }, tunnelFwdStart + 1.0);
+    colorLine(tl, a_proxy_bw, "#175DDC", tunnelFwdStart + 2.0);
     pulse(tl, bw, { color: "#175DDC" });
     statusPill(tl, bw, "build.sh wants github.com");
 
@@ -189,14 +198,12 @@ export function agentAccess(container: HTMLElement) {
     statusPill(tl, bw, "Approved ✓", { color: "#10b981" });
     tl.to({}, { duration: 0.5 });
 
-    // 6. Credential flows back: BW → Proxy
-    packet(tl, a_proxy_bw, { color: "#10b981", duration: 1.4, reverse: true });
-    colorLine(tl, a_proxy_bw, "#10b981");
-    statusPill(tl, proxy, "Relaying…", { color: "#10b981" });
-
-    // 7. Proxy → CLI
-    packet(tl, a_cli_proxy, { color: "#10b981", duration: 1.4, reverse: true });
-    colorLine(tl, [a_cli_proxy, lowerTrunk, buildshBranch], "#10b981");
+    // 6–7. Credential flows back through: BW → Proxy → CLI (single smooth packet)
+    const tunnelRevStart = tl.duration();
+    packet(tl, combinedPath, { color: "#10b981", duration: 2.0, reverse: true });
+    colorLine(tl, a_proxy_bw, "#10b981", tunnelRevStart + 1.0);
+    statusPill(tl, proxy, "Relaying…", { color: "#10b981" }, tunnelRevStart + 1.0);
+    colorLine(tl, [a_cli_proxy, lowerTrunk, buildshBranch], "#10b981", tunnelRevStart + 2.0);
     statusPill(tl, cli, "Decrypting credential", { color: "#10b981" });
     tl.to({}, { duration: 0.4 });
 
