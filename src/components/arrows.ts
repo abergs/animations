@@ -152,9 +152,11 @@ function buildPath(
   }
 }
 
+let _markerCounter = 0
+
+/** Create a unique arrowhead marker with the given color, return its ID */
 export function ensureMarker(svg: SVGSVGElement, color: string): string {
-  const markerId = `arrow-${color.replace('#', '')}`
-  if (svg.querySelector(`#${markerId}`)) return markerId
+  const markerId = `arrow-${_markerCounter++}`
 
   const defs = svg.querySelector('defs')!
   const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker')
@@ -169,7 +171,6 @@ export function ensureMarker(svg: SVGSVGElement, color: string): string {
   const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon')
   polygon.setAttribute('points', '0,1 10,5 0,9')
   polygon.setAttribute('fill', color)
-  polygon.setAttribute('fill-opacity', '1')
   marker.appendChild(polygon)
   defs.appendChild(marker)
 

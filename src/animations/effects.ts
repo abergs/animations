@@ -1,5 +1,4 @@
 import gsap from 'gsap'
-import { ensureMarker } from '../components/arrows'
 
 export interface HighlightOptions {
   color?: string
@@ -111,8 +110,9 @@ export function fadeIn(
   tl.fromTo(nodeEl, { opacity: 0, y }, { opacity: 1, y: 0, duration, ease: 'power2.out' }, position)
 }
 
-/** Registry of original stroke/marker state for resetLines */
-const _lineOrigState = new Map<SVGPathElement, { stroke: string; markerEnd: string }>()
+/** Registry of original state for resetLines */
+const _lineOrigState = new Map<SVGPathElement, { stroke: string }>()
+const _markerOrigFill = new Map<SVGPolygonElement, string>()
 
 /** Change the stroke color of one or more SVG paths on the timeline, including arrowhead markers */
 export function colorLine(
@@ -123,19 +123,29 @@ export function colorLine(
 ): void {
   const arr = Array.isArray(paths) ? paths : [paths]
   tl.call(() => {
-    let svg: SVGSVGElement | null = null
     for (const p of arr) {
       if (!_lineOrigState.has(p)) {
-        _lineOrigState.set(p, {
-          stroke: p.getAttribute('stroke') || '#cbd5e1',
-          markerEnd: p.getAttribute('marker-end') || '',
-        })
+        _lineOrigState.set(p, { stroke: p.getAttribute('stroke') || '#cbd5e1' })
       }
       p.setAttribute('stroke', color)
-      if (p.getAttribute('marker-end')) {
-        svg ??= p.closest('svg')!
-        const markerId = ensureMarker(svg, color)
-        p.setAttribute('marker-end', `url(#${markerId})`)
+      p.style.stroke = color
+      // Directly update the referenced marker's polygon fill color
+      const markerUrl = p.getAttribute('marker-end')
+      if (markerUrl) {
+        const match = markerUrl.match(/url\(#(.+)\)/)
+        if (match) {
+          const svg = p.closest('svg')!
+          const marker = svg.querySelector(`#${match[1]}`) as SVGMarkerElement | null
+          if (marker) {
+            const polygon = marker.querySelector('polygon')
+            if (polygon) {
+              if (!_markerOrigFill.has(polygon)) {
+                _markerOrigFill.set(polygon, polygon.getAttribute('fill') || '#cbd5e1')
+              }
+              polygon.setAttribute('fill', color)
+            }
+          }
+        }
       }
     }
   }, [], position)
@@ -149,11 +159,13 @@ export function resetLines(
   tl.call(() => {
     for (const [p, orig] of _lineOrigState) {
       p.setAttribute('stroke', orig.stroke)
-      if (orig.markerEnd) {
-        p.setAttribute('marker-end', orig.markerEnd)
-      }
+      p.style.stroke = ''
     }
     _lineOrigState.clear()
+    for (const [polygon, origFill] of _markerOrigFill) {
+      polygon.setAttribute('fill', origFill)
+    }
+    _markerOrigFill.clear()
   }, [], position)
 }
 
