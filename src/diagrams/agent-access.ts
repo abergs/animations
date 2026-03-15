@@ -139,8 +139,9 @@ export function agentAccess(container: HTMLElement) {
     const a_cli_proxy = da(svg, cli, proxy, {
       color: "#cbd5e1",
       style: "dashed",
+      noArrow: true,
     });
-    const a_proxy_bw = da(svg, proxy, bw, { color: "#cbd5e1", style: "dashed" });
+    const a_proxy_bw = da(svg, proxy, bw, { color: "#cbd5e1", style: "dashed", noArrow: true });
 
     // --- Animation timeline ---
 
