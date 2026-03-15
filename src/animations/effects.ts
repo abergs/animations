@@ -1,4 +1,5 @@
 import gsap from 'gsap'
+import { ensureMarker } from '../components/arrows'
 
 export interface HighlightOptions {
   color?: string
@@ -113,28 +114,6 @@ export function fadeIn(
 /** Registry of original stroke/marker state for resetLines */
 const _lineOrigState = new Map<SVGPathElement, { stroke: string; markerEnd: string }>()
 
-/** Ensure an arrowhead marker with the given color exists, return its url() reference */
-function ensureMarkerColor(svg: SVGSVGElement, color: string): string {
-  const markerId = `arrow-${color.replace('#', '')}`
-  if (!svg.querySelector(`#${markerId}`)) {
-    const defs = svg.querySelector('defs')!
-    const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker')
-    marker.setAttribute('id', markerId)
-    marker.setAttribute('viewBox', '0 0 10 10')
-    marker.setAttribute('refX', '9')
-    marker.setAttribute('refY', '5')
-    marker.setAttribute('markerWidth', '6')
-    marker.setAttribute('markerHeight', '6')
-    marker.setAttribute('orient', 'auto-start-reverse')
-    const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon')
-    polygon.setAttribute('points', '0,1 10,5 0,9')
-    polygon.setAttribute('fill', color)
-    marker.appendChild(polygon)
-    defs.appendChild(marker)
-  }
-  return `url(#${markerId})`
-}
-
 /** Change the stroke color of one or more SVG paths on the timeline, including arrowhead markers */
 export function colorLine(
   tl: gsap.core.Timeline,
@@ -144,6 +123,7 @@ export function colorLine(
 ): void {
   const arr = Array.isArray(paths) ? paths : [paths]
   tl.call(() => {
+    let svg: SVGSVGElement | null = null
     for (const p of arr) {
       if (!_lineOrigState.has(p)) {
         _lineOrigState.set(p, {
@@ -152,10 +132,10 @@ export function colorLine(
         })
       }
       p.setAttribute('stroke', color)
-      // Update arrowhead marker color if present
       if (p.getAttribute('marker-end')) {
-        const svg = p.closest('svg')!
-        p.setAttribute('marker-end', ensureMarkerColor(svg, color))
+        svg ??= p.closest('svg')!
+        const markerId = ensureMarker(svg, color)
+        p.setAttribute('marker-end', `url(#${markerId})`)
       }
     }
   }, [], position)

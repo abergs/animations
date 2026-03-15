@@ -152,7 +152,7 @@ function buildPath(
   }
 }
 
-function ensureMarker(svg: SVGSVGElement, color: string): string {
+export function ensureMarker(svg: SVGSVGElement, color: string): string {
   const markerId = `arrow-${color.replace('#', '')}`
   if (svg.querySelector(`#${markerId}`)) return markerId
 
@@ -292,10 +292,30 @@ function tributaryPath(
   ].join(' ')
 }
 
+type Point = { x: number; y: number }
+
+/** Compute the merge geometry for converging arrows */
+function computeMergeMetrics(sourcePts: Point[], targetPt: Point) {
+  const centerIdx = sourcePts.reduce((best, pt, i) =>
+    Math.abs(pt.x - targetPt.x) < Math.abs(sourcePts[best].x - targetPt.x) ? i : best, 0)
+
+  const centerPt = sourcePts[centerIdx]
+  const refIdx = centerIdx === 0 ? 1 : 0
+  const refSrc = sourcePts.length > 1 ? sourcePts[refIdx] : centerPt
+  const refDx = Math.abs(targetPt.x - refSrc.x)
+  const refDy = targetPt.y - refSrc.y
+  const r = Math.min(20, refDx || 20, refDy / 2)
+  const turnY = refSrc.y + (targetPt.y - refSrc.y) * 0.5
+  const mergeY = turnY + r
+  const joinPt: Point = { x: targetPt.x, y: mergeY }
+
+  return { centerIdx, centerPt, joinPt, mergeY }
+}
+
 /**
  * Draw multiple source lines that converge into a single trunk leading to the target.
  * The center source draws a straight line all the way down (the trunk).
- * Outer sources draw smooth bezier curves that merge tangentially into the trunk.
+ * Outer sources draw orthogonal paths with rounded corners that merge into the trunk.
  * Returns invisible full-length paths per source for packet animation.
  */
 export function drawMergedArrows(
@@ -307,31 +327,11 @@ export function drawMergedArrows(
   const container = svg.parentElement!
   const color = opts.color || '#94a3b8'
   const strokeWidth = opts.strokeWidth || 1.5
+  const groupId = _mergedGroupCounter++
 
   const targetPt = getAnchorPoint(targetEl, opts.toAnchor || 'top', container)
   const sourcePts = sourceEls.map(el => getAnchorPoint(el, opts.fromAnchor || 'bottom', container))
-
-  // Find the center source (closest X to target)
-  const centerIdx = sourcePts.reduce((best, pt, i) =>
-    Math.abs(pt.x - targetPt.x) < Math.abs(sourcePts[best].x - targetPt.x) ? i : best, 0)
-
-  // Compute the turn Y and radius to match what tributaryPath uses
-  const maxSourceY = Math.max(...sourcePts.map(p => p.y))
-  const joinPt = { x: targetPt.x, y: 0 } // y set below
-  const centerPt = sourcePts[centerIdx]
-
-  // Use the same turn/radius calc as tributaryPath for consistency
-  // Pick the first non-center source to derive turnY (they all share the same targetPt-based formula)
-  const refIdx = sourcePts.findIndex((_, i) => i !== centerIdx)
-  const refSrc = refIdx >= 0 ? sourcePts[refIdx] : centerPt
-  const refDy = targetPt.y - refSrc.y // used only for radius clamping
-  const refDx = Math.abs(targetPt.x - refSrc.x)
-  const radius = 20
-  const r = Math.min(radius, refDx || radius, refDy / 2)
-  const turnY = refSrc.y + (targetPt.y - refSrc.y) * 0.5
-  // The branches end at turnY + r; lower trunk starts there
-  const lowerTrunkStartY = turnY + r
-  joinPt.y = lowerTrunkStartY
+  const { centerIdx, centerPt, joinPt, mergeY } = computeMergeMetrics(sourcePts, targetPt)
 
   // --- Visible upper trunk: center source → branch merge point ---
   const upperTrunkD = `M ${centerPt.x} ${centerPt.y} L ${joinPt.x} ${joinPt.y}`
@@ -341,10 +341,10 @@ export function drawMergedArrows(
   upperTrunkPath.setAttribute('stroke-width', String(strokeWidth))
   upperTrunkPath.setAttribute('fill', 'none')
   svg.appendChild(upperTrunkPath)
-  _mergedRegistry.push({ type: 'upperTrunk', index: centerIdx, path: upperTrunkPath, sourceEls, targetEl, opts, container })
+  _mergedRegistry.push({ type: 'upperTrunk', index: centerIdx, path: upperTrunkPath, groupId, sourceEls, targetEl, opts, container })
 
   // --- Visible lower trunk: branch merge point → target ---
-  const lowerTrunkD = `M ${joinPt.x} ${lowerTrunkStartY} L ${targetPt.x} ${targetPt.y}`
+  const lowerTrunkD = `M ${joinPt.x} ${mergeY} L ${targetPt.x} ${targetPt.y}`
   const lowerTrunkPath = document.createElementNS('http://www.w3.org/2000/svg', 'path')
   lowerTrunkPath.setAttribute('d', lowerTrunkD)
   lowerTrunkPath.setAttribute('stroke', color)
@@ -355,13 +355,16 @@ export function drawMergedArrows(
     lowerTrunkPath.setAttribute('marker-end', `url(#${markerId})`)
   }
   svg.appendChild(lowerTrunkPath)
-  _mergedRegistry.push({ type: 'lowerTrunk', index: centerIdx, path: lowerTrunkPath, sourceEls, targetEl, opts, container })
+  _mergedRegistry.push({ type: 'lowerTrunk', index: centerIdx, path: lowerTrunkPath, groupId, sourceEls, targetEl, opts, container })
 
   // --- Visible tributary branches (outer sources → join point on trunk) ---
+  // Cache tributary path strings for reuse in full paths below
+  const tributaryCache: (string | undefined)[] = sourceEls.map(() => undefined)
   const branchPaths: (SVGPathElement | undefined)[] = sourceEls.map(() => undefined)
   for (let i = 0; i < sourceEls.length; i++) {
     if (i === centerIdx) continue
     const d = tributaryPath(sourcePts[i], joinPt, targetPt)
+    tributaryCache[i] = d
     const branchPath = document.createElementNS('http://www.w3.org/2000/svg', 'path')
     branchPath.setAttribute('d', d)
     branchPath.setAttribute('stroke', color)
@@ -369,7 +372,7 @@ export function drawMergedArrows(
     branchPath.setAttribute('fill', 'none')
     svg.appendChild(branchPath)
     branchPaths[i] = branchPath
-    _mergedRegistry.push({ type: 'branch', index: i, path: branchPath, sourceEls, targetEl, opts, container })
+    _mergedRegistry.push({ type: 'branch', index: i, path: branchPath, groupId, sourceEls, targetEl, opts, container })
   }
 
   // --- Invisible full paths per source (for packet animation) ---
@@ -377,11 +380,9 @@ export function drawMergedArrows(
     const srcPt = sourcePts[i]
     let fullD: string
     if (i === centerIdx) {
-      // Center: straight line
       fullD = `M ${srcPt.x} ${srcPt.y} L ${targetPt.x} ${targetPt.y}`
     } else {
-      // Tributary curve to join point, then straight down to target
-      fullD = tributaryPath(srcPt, joinPt, targetPt) + ` L ${targetPt.x} ${targetPt.y}`
+      fullD = tributaryCache[i]! + ` L ${targetPt.x} ${targetPt.y}`
     }
 
     const fullPath = document.createElementNS('http://www.w3.org/2000/svg', 'path')
@@ -395,7 +396,7 @@ export function drawMergedArrows(
     fullPath.dataset.toLabel = (tCard.querySelector('.text-sm.font-semibold') as HTMLElement)?.textContent?.trim() || '???'
 
     svg.appendChild(fullPath)
-    _mergedRegistry.push({ type: 'full', index: i, path: fullPath, sourceEls, targetEl, opts, container })
+    _mergedRegistry.push({ type: 'full', index: i, path: fullPath, groupId, sourceEls, targetEl, opts, container })
     return fullPath
   })
 
@@ -406,6 +407,7 @@ interface MergedMeta {
   type: 'branch' | 'upperTrunk' | 'lowerTrunk' | 'full'
   index: number
   path: SVGPathElement
+  groupId: number
   sourceEls: HTMLElement[]
   targetEl: HTMLElement
   opts: ArrowOptions
@@ -413,42 +415,27 @@ interface MergedMeta {
 }
 
 const _mergedRegistry: MergedMeta[] = []
+let _mergedGroupCounter = 0
 
 function redrawMergedArrows(container: HTMLElement): void {
-  const groups = new Map<string, MergedMeta[]>()
+  const groups = new Map<number, MergedMeta[]>()
   for (const meta of _mergedRegistry) {
     if (meta.container !== container) continue
-    const key = meta.sourceEls.map(el => el.id || '').join(',') + '→' + (meta.targetEl.id || '')
-    if (!groups.has(key)) groups.set(key, [])
-    groups.get(key)!.push(meta)
+    if (!groups.has(meta.groupId)) groups.set(meta.groupId, [])
+    groups.get(meta.groupId)!.push(meta)
   }
 
   for (const metas of groups.values()) {
     const first = metas[0]
     const targetPt = getAnchorPoint(first.targetEl, first.opts.toAnchor || 'top', container)
     const sourcePts = first.sourceEls.map(el => getAnchorPoint(el, first.opts.fromAnchor || 'bottom', container))
-
-    const centerIdx = sourcePts.reduce((best, pt, i) =>
-      Math.abs(pt.x - targetPt.x) < Math.abs(sourcePts[best].x - targetPt.x) ? i : best, 0)
-
-    const centerPt = sourcePts[centerIdx]
-
-    // Recompute turn/radius to match tributaryPath
-    const refIdx = sourcePts.findIndex((_, i) => i !== centerIdx)
-    const refSrc = refIdx >= 0 ? sourcePts[refIdx] : centerPt
-    const refDx = Math.abs(targetPt.x - refSrc.x)
-    const refDy = targetPt.y - refSrc.y
-    const radius = 20
-    const r = Math.min(radius, refDx || radius, refDy / 2)
-    const turnY = refSrc.y + (targetPt.y - refSrc.y) * 0.5
-    const lowerTrunkStartY = turnY + r
-    const joinPt = { x: targetPt.x, y: lowerTrunkStartY }
+    const { centerIdx, centerPt, joinPt, mergeY } = computeMergeMetrics(sourcePts, targetPt)
 
     for (const meta of metas) {
       if (meta.type === 'upperTrunk') {
         meta.path.setAttribute('d', `M ${centerPt.x} ${centerPt.y} L ${joinPt.x} ${joinPt.y}`)
       } else if (meta.type === 'lowerTrunk') {
-        meta.path.setAttribute('d', `M ${joinPt.x} ${lowerTrunkStartY} L ${targetPt.x} ${targetPt.y}`)
+        meta.path.setAttribute('d', `M ${joinPt.x} ${mergeY} L ${targetPt.x} ${targetPt.y}`)
       } else if (meta.type === 'branch') {
         meta.path.setAttribute('d', tributaryPath(sourcePts[meta.index], joinPt, targetPt))
       } else if (meta.type === 'full') {

@@ -131,7 +131,7 @@ export function agentAccess(container: HTMLElement) {
 
     // Agents → CLI (converging funnel)
     const merged = drawMergedArrows(svg, [claude, openclaw, buildsh], cli, { color: "#cbd5e1", noArrow: true });
-    const [a_claude_cli, a_openclaw_cli, a_buildsh_cli] = merged.paths;
+    const [, , a_buildsh_cli] = merged.paths;
     const buildshBranch = merged.branches[2]!;
     const lowerTrunk = merged.lowerTrunk;
 
