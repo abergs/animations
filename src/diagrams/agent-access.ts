@@ -158,7 +158,7 @@ export function agentAccess(container: HTMLElement) {
     const tl = gsap.timeline({ repeat: -1, repeatDelay: 2 });
 
     // 1. build.sh needs a credential
-    statusPill(tl, buildsh, "git push → needs credentials");
+    statusPill(tl, buildsh, "Needs credentials");
     tl.to({}, { duration: 0.3 });
 
     // 2. Request: build.sh → CLI
@@ -210,7 +210,7 @@ export function agentAccess(container: HTMLElement) {
     // 8. CLI → build.sh
     packet(tl, a_buildsh_cli, { color: "#10b981", duration: 1.2, reverse: true });
     highlight(tl, buildsh, { color: "#10b981" });
-    statusPill(tl, buildsh, "Credential received — pushing to GitHub", {
+    statusPill(tl, buildsh, "Credential received ✓", {
       color: "#10b981",
     });
 
