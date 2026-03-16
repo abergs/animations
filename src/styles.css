@@ -60,6 +60,11 @@ body.dark .flow-node {
   box-shadow: 0 1px 3px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.4);
 }
 
+/* Dark mode: group labels */
+body.dark .bg-white {
+  background-color: #0d1117 !important;
+}
+
 /* Dark mode: ghost nodes */
 body.dark .flow-node[style*="border-style: dashed"] {
   background-color: transparent !important;

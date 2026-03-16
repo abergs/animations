@@ -1,4 +1,4 @@
-export type CurveType = 's' | 'straight' | 'arc' | 'bezier' | 'step'
+export type CurveType = 's' | 'straight' | 'arc' | 'bezier' | 'step' | 'step-round'
 export type Anchor = 'top' | 'bottom' | 'left' | 'right'
 
 export interface ArrowOptions {
@@ -145,6 +145,39 @@ function buildPath(
     case 'step': {
       const midY = (from.y + to.y) / 2
       return `M ${from.x} ${from.y} L ${from.x} ${midY} L ${to.x} ${midY} L ${to.x} ${to.y}`
+    }
+
+    case 'step-round': {
+      // Orthogonal path with rounded corners (quarter-circle arcs)
+      // Works in both downward and upward directions
+      const goingDown = to.y > from.y
+      const sMidY = from.y + (to.y - from.y) * (goingDown ? 0.35 : 0.65)
+      const sDx = to.x - from.x
+      const sDy = to.y - from.y
+      const halfVert = Math.abs(sMidY - from.y)
+      const halfHoriz = Math.abs(sDx)
+      const r = Math.min(20, halfVert, halfHoriz / 2 || halfVert)
+      const dirX = sDx > 0 ? 1 : sDx < 0 ? -1 : 0
+      const dirY = sDy > 0 ? 1 : -1 // +1 = downward, -1 = upward
+
+      if (dirX === 0 || r < 1) {
+        // Straight vertical — no corners needed
+        return `M ${from.x} ${from.y} L ${to.x} ${to.y}`
+      }
+
+      return [
+        `M ${from.x} ${from.y}`,
+        // Vertical from source toward midY
+        `L ${from.x} ${sMidY - dirY * r}`,
+        // Round corner into horizontal
+        `Q ${from.x} ${sMidY}, ${from.x + dirX * r} ${sMidY}`,
+        // Horizontal to second corner
+        `L ${to.x - dirX * r} ${sMidY}`,
+        // Round corner into vertical toward target
+        `Q ${to.x} ${sMidY}, ${to.x} ${sMidY + dirY * r}`,
+        // Vertical to target
+        `L ${to.x} ${to.y}`,
+      ].join(' ')
     }
 
     default:

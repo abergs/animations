@@ -1,5 +1,6 @@
 import "./styles.css";
 import { agentAccess } from "./diagrams/agent-access";
+import { agentAccessArch } from "./diagrams/agent-access-arch";
 
 // Dark mode: read from URL and persist via query param
 const params = new URLSearchParams(window.location.search);
@@ -22,5 +23,12 @@ toggle.addEventListener("click", () => {
 });
 document.body.appendChild(toggle);
 
+// Diagram selection: ?diagram=arch for architecture view, default for user-facing flow
+const diagram = params.get("diagram");
 const container = document.getElementById("app")!;
-agentAccess(container);
+
+if (diagram === "arch") {
+  agentAccessArch(container);
+} else {
+  agentAccess(container);
+}
