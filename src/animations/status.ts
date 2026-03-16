@@ -60,6 +60,7 @@ export function statusPill(
   tl.call(() => {
     const pill = nodeEl.querySelector('.status-pill') as HTMLElement | null
     if (pill) {
+      pill.style.display = ''
       pill.textContent = text
       pill.style.color = color
       pill.style.backgroundColor = color + '18'
@@ -82,6 +83,10 @@ export function resetStatusPills(tl: gsap.core.Timeline, tlPosition?: string | n
         pill.textContent = state.text
         pill.style.color = state.color
         pill.style.backgroundColor = state.backgroundColor
+        // Re-hide if it was originally hidden
+        if (state.text === '\u00A0' || !state.text.trim()) {
+          pill.style.display = 'none'
+        }
       }
       const anno = nodeEl.querySelector('.status-pill-anno') as HTMLElement | null
       if (anno) {

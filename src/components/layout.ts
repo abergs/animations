@@ -9,6 +9,7 @@ export interface LayoutOptions {
   rowGap?: string
   nodeGap?: string
   center?: boolean
+  align?: 'center' | 'left' | 'right'
   title?: string
   subtitle?: string
   titleColor?: string
@@ -49,7 +50,8 @@ export function layoutRows(
     }
 
     const rowDiv = document.createElement('div')
-    rowDiv.className = 'flex items-start justify-center'
+    const justify = opts.align === 'left' ? 'justify-start' : opts.align === 'right' ? 'justify-end' : 'justify-center'
+    rowDiv.className = `flex items-start ${justify}`
     rowDiv.style.gap = opts.nodeGap || '1.5rem'
     rowDiv.style.marginBottom = opts.rowGap || '2.5rem'
 

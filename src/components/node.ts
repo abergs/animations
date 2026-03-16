@@ -67,27 +67,16 @@ export function createNode(label: string, opts: NodeOptions = {}): HTMLElement {
 
     el.appendChild(row1)
 
-    // Row 2: status text
+    // Row 2: status text (serves as both anno and the animation target)
     const annoPill = document.createElement('span')
-    annoPill.className = 'status-pill-anno'
+    annoPill.className = 'status-pill-anno status-pill'
     if (opts.status) {
       annoPill.style.color = opts.statusColor || '#94a3b8'
       annoPill.textContent = opts.status
     } else {
-      annoPill.style.color = '#94a3b8'
-      annoPill.textContent = '\u00A0'
+      annoPill.style.display = 'none'
     }
     el.appendChild(annoPill)
-
-    // Hidden pill for snapshot compatibility
-    const hiddenPill = document.createElement('span')
-    hiddenPill.className = 'status-pill'
-    hiddenPill.style.display = 'none'
-    if (opts.status) {
-      hiddenPill.style.color = opts.statusColor || '#94a3b8'
-      hiddenPill.textContent = opts.status
-    }
-    el.appendChild(hiddenPill)
 
     wrapper.appendChild(el)
     return wrapper
@@ -128,10 +117,8 @@ export function createNode(label: string, opts: NodeOptions = {}): HTMLElement {
     pill.style.color = opts.statusColor || '#94a3b8'
     pill.textContent = opts.status
   } else {
-    // Empty but present so animations can target it
-    pill.style.backgroundColor = 'transparent'
-    pill.style.color = 'transparent'
-    pill.textContent = '\u00A0' // nbsp to hold height
+    // Hidden but present so animations can target it
+    pill.style.display = 'none'
   }
   textCol.appendChild(pill)
 

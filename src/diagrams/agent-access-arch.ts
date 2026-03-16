@@ -84,8 +84,8 @@ export function agentAccessArch(container: HTMLElement) {
     icon: icons.claude,
     iconBg: "#f0f4ff",
     subtitle: "AI Assistant",
-    width: "220px",
-    status: "Idle",
+    width: "180px",
+    status: "get_credential()",
     statusColor: "#94a3b8",
   });
 
@@ -93,8 +93,8 @@ export function agentAccessArch(container: HTMLElement) {
     icon: icons.openclaw,
     iconBg: "#fef3e2",
     subtitle: "Agent Framework",
-    width: "220px",
-    status: "Idle",
+    width: "180px",
+    status: "get_credential()",
     statusColor: "#94a3b8",
   });
 
@@ -102,8 +102,8 @@ export function agentAccessArch(container: HTMLElement) {
     icon: icons.build,
     iconBg: "#f0fdf4",
     subtitle: "CI/CD Script",
-    width: "220px",
-    status: "Idle",
+    width: "180px",
+    status: "get_credential()",
     statusColor: "#94a3b8",
   });
 
@@ -113,7 +113,7 @@ export function agentAccessArch(container: HTMLElement) {
     iconBg: "#f1f5f9",
     subtitle: "Agent-side command",
     width: "220px",
-    status: "Idle",
+    status: "connect --token ABC-DEF",
     statusColor: "#94a3b8",
   });
 
@@ -122,7 +122,7 @@ export function agentAccessArch(container: HTMLElement) {
     iconBg: "#f1f5f9",
     subtitle: "User-side command",
     width: "220px",
-    status: "Idle",
+    status: "on_connection_request()",
     statusColor: "#94a3b8",
   });
 
@@ -132,7 +132,7 @@ export function agentAccessArch(container: HTMLElement) {
     iconBg: "#f0f4ff",
     subtitle: "Agent (untrusted) side",
     width: "220px",
-    status: "Idle",
+    status: "request_credential()",
     statusColor: "#94a3b8",
   });
 
@@ -141,7 +141,7 @@ export function agentAccessArch(container: HTMLElement) {
     iconBg: "#f0fdf4",
     subtitle: "User (trusted) side",
     width: "220px",
-    status: "Idle",
+    status: "on_credential_request()",
     statusColor: "#94a3b8",
   });
 
@@ -149,9 +149,11 @@ export function agentAccessArch(container: HTMLElement) {
   const bw = cn("Bitwarden", {
     icon: icons.shield,
     ghost: true,
-    status: "Credential provider",
     statusColor: "#94a3b8",
   });
+  // Fix width so status text changes don't reflow the layout
+  const bwCard = bw.querySelector('.flow-node') as HTMLElement;
+  if (bwCard) bwCard.style.minWidth = '160px';
 
   // --- Core protocol crate nodes ---
   const proxyProto = cn("ap-proxy-protocol", {
@@ -159,7 +161,7 @@ export function agentAccessArch(container: HTMLElement) {
     iconBg: "#e8f0fe",
     subtitle: "COSE auth · Rendezvous · Routing",
     width: "220px",
-    status: "Idle",
+    status: "authenticate() · send()",
     statusColor: "#94a3b8",
   });
 
@@ -168,7 +170,7 @@ export function agentAccessArch(container: HTMLElement) {
     iconBg: "#f5f3ff",
     subtitle: "Noise NNpsk2 · XChaCha20Poly1305",
     width: "220px",
-    status: "Idle",
+    status: "handshake() · encrypt()",
     statusColor: "#94a3b8",
   });
 
@@ -196,16 +198,26 @@ export function agentAccessArch(container: HTMLElement) {
     labelColor: "#6366f1",
   });
 
-  const protoGroup = createGroup("E2EE Protocol", [proxyProto, noise], {
+  const protoPlus = document.createElement("span");
+  protoPlus.textContent = "+";
+  protoPlus.className = "text-xl font-light text-slate-300";
+
+  const protoGroup = createGroup("E2EE Protocol", [proxyProto, protoPlus, noise], {
     borderColor: "#175DDC40",
     labelColor: "#175DDC",
   });
+
+  const consumerGroup = createGroup("AI Agents & Applications", [claude, openclaw, buildsh], {
+    borderColor: "#94a3b860",
+    labelColor: "#64748b",
+  });
+
 
   // --- Layout ---
   lr(
     container,
     [
-      { nodes: [claude, openclaw, buildsh], label: "AI Agents & Applications" },
+      [consumerGroup],
       [cliGroup],
       [clientGroup],
       [protoGroup],
@@ -220,33 +232,37 @@ export function agentAccessArch(container: HTMLElement) {
     },
   );
 
+  // Align left edges of the three architecture groups by matching widths
+  requestAnimationFrame(() => {
+    const maxWidth = Math.max(
+      cliGroup.offsetWidth,
+      clientGroup.offsetWidth,
+      protoGroup.offsetWidth,
+    );
+    for (const g of [cliGroup, clientGroup, protoGroup]) {
+      g.style.width = maxWidth + "px";
+      g.style.boxSizing = "border-box";
+    }
+  });
+
   // --- Arrows ---
   requestAnimationFrame(() => {
     const svg = csvg(container);
 
-    // Consumers → aac connect (step-round curves)
-    const a_claude_cli = da(svg, claude, cliConnect, {
-      color: "#cbd5e1",
-      curve: "step-round",
-      noArrow: true,
-    });
-    const a_openclaw_cli = da(svg, openclaw, cliConnect, {
-      color: "#cbd5e1",
-      curve: "step-round",
-      noArrow: true,
-    });
-    const a_buildsh_cli = da(svg, buildsh, cliConnect, {
+    // Consumers group → CLI group (step-round)
+    const a_consumers_cli = da(svg, consumerGroup, cliGroup, {
       color: "#cbd5e1",
       curve: "step-round",
       noArrow: true,
     });
 
-    // aac listen → Bitwarden (horizontal, within the CLI group)
-    const a_listen_bw = da(svg, cliListen, bw, {
+    // aac listen — Bitwarden (horizontal, no arrow)
+    da(svg, cliListen, bw, {
       color: "#cbd5e1",
       curve: "straight",
       fromAnchor: "right",
       toAnchor: "left",
+      noArrow: true,
     });
 
     // CLI group → client group (step-round)
@@ -292,21 +308,25 @@ export function agentAccessArch(container: HTMLElement) {
     // --- Helper: packet with a smooth colored trail ---
     const trailOverlays: SVGPathElement[] = [];
 
+    // Constant speed: compute duration from path length
+    const SPEED = 400; // pixels per second
+
     function packetWithTrail(
       tl: gsap.core.Timeline,
       path: SVGPathElement,
       color: string,
-      duration: number,
+      targetNode?: HTMLElement,
     ) {
-      const pos = tl.duration(); // current timeline position
+      const len = path.getTotalLength();
+      const duration = len / SPEED;
+      const pos = tl.duration();
 
       // Create colored overlay path
       const overlay = path.cloneNode() as SVGPathElement;
       overlay.setAttribute("stroke", color);
       overlay.setAttribute("stroke-width", "1.5");
       overlay.setAttribute("fill", "none");
-      overlay.removeAttribute("stroke-dasharray"); // remove dashed if present
-      const len = path.getTotalLength();
+      overlay.removeAttribute("stroke-dasharray");
       overlay.style.strokeDasharray = String(len);
       overlay.style.strokeDashoffset = String(len);
       path.parentElement!.appendChild(overlay);
@@ -321,29 +341,32 @@ export function agentAccessArch(container: HTMLElement) {
 
       // Animate packet on top
       packet(tl, path, { color, duration, noEntry: true, noExit: true }, pos);
+
+      // Pulse the target node's status pill when packet arrives
+      if (targetNode) {
+        pulse(tl, targetNode, { color });
+      }
     }
 
     // --- Animation: packet flows down left side, up right side ---
     const tl = gsap.timeline({ repeat: -1, repeatDelay: 2 });
 
     // Request: build.sh → aac connect → RemoteClient → ap-proxy-protocol → Proxy
-    statusPill(tl, buildsh, "Needs credentials");
+    statusPill(tl, buildsh, "get_credential()");
     tl.to({}, { duration: 0.3 });
 
-    packetWithTrail(tl, a_buildsh_cli, "#175DDC", 0.8);
-    packetWithTrail(tl, a_cli_clients, "#175DDC", 0.6);
-    packetWithTrail(tl, a_client_proto, "#175DDC", 0.6);
-    packetWithTrail(tl, a_proto_proxy, "#175DDC", 0.6);
-    statusPill(tl, proxy, "Relaying (blind)", { color: "#175DDC" });
+    packetWithTrail(tl, a_consumers_cli, "#175DDC", cliConnect);
+    packetWithTrail(tl, a_cli_clients, "#175DDC", clientGroup);
+    packetWithTrail(tl, a_client_proto, "#175DDC", protoGroup);
+    packetWithTrail(tl, a_proto_proxy, "#175DDC", proxy);
     tl.to({}, { duration: 0.3 });
 
     // Response: Proxy → ap-noise → UserClient → aac listen → Bitwarden
-    packetWithTrail(tl, a_proxy_noise, "#175DDC", 0.6);
-    packetWithTrail(tl, a_noise_user, "#175DDC", 0.6);
-    packetWithTrail(tl, a_user_listen, "#175DDC", 0.6);
-    packetWithTrail(tl, a_listen_bw, "#175DDC", 0.4);
+    packetWithTrail(tl, a_proxy_noise, "#175DDC", noise);
+    packetWithTrail(tl, a_noise_user, "#175DDC", user);
+    packetWithTrail(tl, a_user_listen, "#175DDC", cliListen);
     highlight(tl, bw, { color: "#175DDC" });
-    statusPill(tl, bw, "Credential delivered ✓", { color: "#175DDC" });
+    statusPill(tl, bw, "Credential requested", { color: "#175DDC" });
 
     tl.to({}, { duration: 1.5 });
 
