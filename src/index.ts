@@ -14,6 +14,9 @@ export type { ArrowOptions, CurveType, Anchor } from './components/arrows'
 export { drawStepRoundAtY, drawBypassArrow, alignGroupWidths, gapMidY } from './components/paths'
 export type { BypassOptions } from './components/paths'
 
+export { createPlaybackControls } from './components/playback'
+export type { PlaybackOptions } from './components/playback'
+
 // Animations
 export { packet } from './animations/packet'
 export type { PacketOptions } from './animations/packet'

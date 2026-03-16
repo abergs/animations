@@ -89,7 +89,10 @@ const icons = {
   ),
 };
 
-export function agentAccessArch(container: HTMLElement) {
+export function agentAccessArch(
+  container: HTMLElement,
+  onReady?: (tl: gsap.core.Timeline, trailState: import("../animations/trail").TrailState) => void,
+) {
   // --- Consumer nodes ---
   const claude = cn("Claude", {
     icon: icons.claude,
@@ -240,27 +243,6 @@ export function agentAccessArch(container: HTMLElement) {
     },
   );
 
-  // --- Playback controls ---
-  const controls = document.createElement("div");
-  controls.className = "playback-controls";
-
-  const playBtn = document.createElement("button");
-  playBtn.className = "playback-btn active";
-  playBtn.textContent = "▶ Play";
-
-  const pauseBtn = document.createElement("button");
-  pauseBtn.className = "playback-btn";
-  pauseBtn.textContent = "⏸ Pause";
-
-  const resetBtn = document.createElement("button");
-  resetBtn.className = "playback-btn";
-  resetBtn.textContent = "↺ Reset";
-
-  controls.appendChild(playBtn);
-  controls.appendChild(pauseBtn);
-  controls.appendChild(resetBtn);
-  container.appendChild(controls);
-
   // --- Layout ---
   lr(
     container,
@@ -273,10 +255,20 @@ export function agentAccessArch(container: HTMLElement) {
     },
   );
 
-  // Align left edges of the three architecture groups by matching widths
-  alignGroupWidths(cliGroup, clientGroup, protoGroup);
+  // --- Arrows (wait for layout + group width alignment to settle) ---
+  // First RAF: align group widths
+  // Second RAF: draw arrows with final positions
+  requestAnimationFrame(() => {
+    const maxWidth = Math.max(
+      cliGroup.offsetWidth,
+      clientGroup.offsetWidth,
+      protoGroup.offsetWidth,
+    );
+    for (const g of [cliGroup, clientGroup, protoGroup]) {
+      g.style.width = maxWidth + "px";
+      g.style.boxSizing = "border-box";
+    }
 
-  // --- Arrows ---
   requestAnimationFrame(() => {
     const svg = csvg(container);
 
@@ -375,32 +367,8 @@ export function agentAccessArch(container: HTMLElement) {
 
     tl.play();
 
-    // Wire playback controls
-    function setActive(btn: HTMLElement) {
-      playBtn.classList.remove("active");
-      pauseBtn.classList.remove("active");
-      btn.classList.add("active");
-    }
-
-    playBtn.addEventListener("click", () => {
-      tl.play();
-      setActive(playBtn);
-    });
-
-    pauseBtn.addEventListener("click", () => {
-      tl.pause();
-      setActive(pauseBtn);
-    });
-
-    resetBtn.addEventListener("click", () => {
-      tl.pause();
-      tl.progress(0);
-      // Clear trails
-      for (const o of trailState.overlays) {
-        const len = o.getTotalLength();
-        o.style.strokeDashoffset = String(len);
-      }
-      setActive(pauseBtn);
-    });
-  });
+    // Wire playback controls if a toolbar was provided
+    if (onReady) onReady(tl, trailState);
+  }); // end inner RAF (arrows)
+  }); // end outer RAF (group widths)
 }
