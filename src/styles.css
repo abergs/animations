@@ -99,6 +99,46 @@ h1.text-2xl {
   letter-spacing: -0.02em;
 }
 
+/* Playback controls */
+.playback-controls {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 1.5rem;
+}
+.playback-btn {
+  padding: 5px 14px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  color: #475569;
+  transition: all 0.15s;
+}
+.playback-btn:hover {
+  background: #f1f5f9;
+}
+.playback-btn.active {
+  background: #175DDC;
+  color: #fff;
+  border-color: #175DDC;
+}
+body.dark .playback-btn {
+  background: #21262d;
+  color: #e6edf3;
+  border-color: #30363d;
+}
+body.dark .playback-btn:hover {
+  background: #30363d;
+}
+body.dark .playback-btn.active {
+  background: #175DDC;
+  color: #fff;
+  border-color: #175DDC;
+}
+
 /* Status pill */
 .status-pill {
   font-size: 0.65rem;

@@ -21,7 +21,7 @@ export function packet(
 ): void {
   const svg = arrowPath.closest('svg')!
   const color = opts.color || '#175DDC'
-  const radius = opts.radius || 5
+  const radius = opts.radius || 6
   const duration = opts.duration || 0.8
   const ease = opts.ease || 'power1.inOut'
   const noEntry = opts.noEntry || false
@@ -34,7 +34,29 @@ export function packet(
   circle.setAttribute('opacity', '0')
 
   if (opts.glow !== false) {
-    circle.setAttribute('filter', `drop-shadow(0 0 4px ${color})`)
+    const filterId = `glow-${Math.random().toString(36).slice(2, 8)}`
+    const defs = svg.querySelector('defs') || svg.appendChild(document.createElementNS('http://www.w3.org/2000/svg', 'defs'))
+    const filter = document.createElementNS('http://www.w3.org/2000/svg', 'filter')
+    filter.setAttribute('id', filterId)
+    filter.setAttribute('x', '-200%')
+    filter.setAttribute('y', '-200%')
+    filter.setAttribute('width', '500%')
+    filter.setAttribute('height', '500%')
+    const blur = document.createElementNS('http://www.w3.org/2000/svg', 'feGaussianBlur')
+    blur.setAttribute('in', 'SourceGraphic')
+    blur.setAttribute('stdDeviation', '3')
+    blur.setAttribute('result', 'blur')
+    const merge = document.createElementNS('http://www.w3.org/2000/svg', 'feMerge')
+    const m1 = document.createElementNS('http://www.w3.org/2000/svg', 'feMergeNode')
+    m1.setAttribute('in', 'blur')
+    const m2 = document.createElementNS('http://www.w3.org/2000/svg', 'feMergeNode')
+    m2.setAttribute('in', 'SourceGraphic')
+    merge.appendChild(m1)
+    merge.appendChild(m2)
+    filter.appendChild(blur)
+    filter.appendChild(merge)
+    defs.appendChild(filter)
+    circle.setAttribute('filter', `url(#${filterId})`)
   }
 
   svg.appendChild(circle)

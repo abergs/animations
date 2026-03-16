@@ -18,7 +18,7 @@ export function createNode(label: string, opts: NodeOptions = {}): HTMLElement {
   const el = document.createElement('div')
   el.className = [
     'flow-node',
-    'relative flex items-center gap-3 px-4 py-3 rounded-xl bg-white border-2',
+    'relative flex items-start gap-3 px-4 py-4 rounded-xl bg-white border-2',
     'shadow-sm border-slate-200',
   ].join(' ')
 
@@ -87,7 +87,7 @@ export function createNode(label: string, opts: NodeOptions = {}): HTMLElement {
   // Icon
   if (opts.icon) {
     const iconWrap = document.createElement('div')
-    iconWrap.className = 'flex items-center justify-center w-9 h-9 rounded-lg shrink-0'
+    iconWrap.className = 'flex items-center justify-center w-9 h-9 rounded-lg shrink-0 mt-0.5'
     iconWrap.style.backgroundColor = opts.iconBg || '#f1f5f9'
     iconWrap.innerHTML = opts.icon
     el.appendChild(iconWrap)
@@ -95,16 +95,16 @@ export function createNode(label: string, opts: NodeOptions = {}): HTMLElement {
 
   // Text content
   const textCol = document.createElement('div')
-  textCol.className = 'flex flex-col min-w-0 flex-1'
+  textCol.className = 'flex flex-col gap-1 min-w-0 flex-1'
 
   const labelEl = document.createElement('div')
-  labelEl.className = 'text-sm font-semibold text-slate-800 leading-tight'
+  labelEl.className = 'text-sm font-semibold text-slate-800 leading-snug'
   labelEl.textContent = label
   textCol.appendChild(labelEl)
 
   if (opts.subtitle) {
     const sub = document.createElement('div')
-    sub.className = 'text-xs text-slate-400 mt-0.5 leading-tight'
+    sub.className = 'text-xs text-slate-400 leading-normal'
     sub.textContent = opts.subtitle
     textCol.appendChild(sub)
   }

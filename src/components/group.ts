@@ -19,7 +19,7 @@ export function createGroup(label: string, nodes: HTMLElement[], opts: GroupOpti
 
   // Inner container
   const inner = document.createElement('div')
-  inner.className = 'flex items-center gap-4 flex-wrap justify-center'
+  inner.className = 'flex items-center gap-4 justify-center'
   for (const node of nodes) {
     inner.appendChild(node)
   }
