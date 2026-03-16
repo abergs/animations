@@ -28,7 +28,6 @@ body.dark .dark-toggle:hover {
   background: #30363d;
 }
 
-/* Dark mode: background transition */
 body {
   transition: background-color 0.4s, color 0.4s;
 }
