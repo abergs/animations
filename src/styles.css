@@ -1,8 +1,92 @@
 @import "tailwindcss";
 
+/* Dark mode toggle */
+.dark-toggle {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 100;
+  padding: 6px 16px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  color: #475569;
+  transition: all 0.3s;
+}
+.dark-toggle:hover {
+  background: #f1f5f9;
+}
+body.dark .dark-toggle {
+  background: #21262d;
+  color: #e6edf3;
+  border-color: #30363d;
+}
+body.dark .dark-toggle:hover {
+  background: #30363d;
+}
+
+/* Dark mode: background transition */
+body {
+  transition: background-color 0.4s, color 0.4s;
+}
+body.dark {
+  background-color: #0d1117 !important;
+  color: #e6edf3;
+}
+
+/* Dark mode: all text */
+body.dark h1 {
+  color: #f0f6fc !important;
+}
+body.dark p, body.dark span, body.dark div {
+  color: inherit;
+}
+body.dark .text-slate-800 {
+  color: #f0f6fc !important;
+}
+body.dark .text-slate-500 {
+  color: #8b949e !important;
+}
+body.dark .text-slate-400 {
+  color: #8b949e !important;
+}
+
+/* Dark mode: node cards */
+body.dark .flow-node {
+  background-color: #161b22 !important;
+  border-color: #30363d !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.4);
+}
+
+/* Dark mode: ghost nodes */
+body.dark .flow-node[style*="border-style: dashed"] {
+  background-color: transparent !important;
+  border-color: #30363d !important;
+}
+
+/* Dark mode: status pills — boost contrast */
+body.dark .status-pill,
+body.dark .status-pill-anno {
+  filter: brightness(1.6) saturate(0.9);
+}
+
+/* Dark mode: slide-out card */
+body.dark .flow-slideout {
+  background-color: #161b22 !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+}
+
+/* Dark mode: SVG arrow lines */
+body.dark .svg-overlay path[stroke="#cbd5e1"] {
+  stroke: #30363d;
+}
+
 /* Base node card styling */
 .flow-node {
-  transition: box-shadow 0.3s, border-color 0.3s;
+  transition: box-shadow 0.3s, border-color 0.3s, background-color 0.4s;
   box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.06);
 }
 
