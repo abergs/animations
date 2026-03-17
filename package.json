@@ -8,7 +8,8 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build"
+    "build": "tsc && vite build && bun run build:embed",
+    "build:embed": "rm -rf dist/embed && EMBED_ENTRY=handshake vite build --config vite.config.embed.ts && EMBED_ENTRY=agent-access vite build --config vite.config.embed.ts && EMBED_ENTRY=agent-access-arch vite build --config vite.config.embed.ts && EMBED_ENTRY=key-rotation vite build --config vite.config.embed.ts"
   },
   "dependencies": {
     "gsap": "^3.12.7"
