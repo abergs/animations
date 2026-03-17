@@ -37,6 +37,14 @@ darkToggle.addEventListener("click", () => {
   window.history.replaceState(null, "", url.toString());
 });
 
+const homeLink = document.createElement("a");
+homeLink.href = "/";
+homeLink.className = "playback-btn";
+homeLink.style.position = "absolute";
+homeLink.style.left = "16px";
+homeLink.textContent = "← Home";
+toolbar.appendChild(homeLink);
+
 toolbar.appendChild(darkToggle);
 document.body.prepend(toolbar);
 
@@ -53,6 +61,14 @@ if (routeName && routes[routeName]) {
 
   const formatLabel = (s: string) => s.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
   document.title = `${formatLabel(routeName)} — Diagram Animations`;
+
+  const editLink = document.createElement("a");
+  editLink.href = `https://github.com/abergs/animations/edit/main/src/diagrams/${routeName}.ts`;
+  editLink.target = "_blank";
+  editLink.rel = "noopener";
+  editLink.className = "playback-btn";
+  editLink.textContent = "✎ Edit";
+  toolbar.appendChild(editLink);
 
   routes[routeName]().then((mod) => mod.default(container, (tl: gsap.core.Timeline, snapshot: Snapshot) => {
     const controls = createPlaybackControls(tl, { snapshot });

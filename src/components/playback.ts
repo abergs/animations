@@ -51,20 +51,26 @@ export function createPlaybackControls(
   const controls = document.createElement('div')
   controls.className = 'playback-controls'
 
+  const btnGroup = document.createElement('div')
+  btnGroup.className = 'playback-btn-group'
+
   const toggleBtn = document.createElement('button')
-  toggleBtn.className = `playback-btn${playing ? ' active' : ''}`
+  toggleBtn.className = `playback-btn playback-btn-left${playing ? ' active' : ''}`
   toggleBtn.textContent = playing ? '⏸ Pause' : '▶ Play'
 
   const resetBtn = document.createElement('button')
-  resetBtn.className = 'playback-btn'
-  resetBtn.textContent = '↺ Reset'
+  resetBtn.className = 'playback-btn playback-btn-right'
+  resetBtn.textContent = '↺'
+  resetBtn.title = 'Reset'
+
+  btnGroup.appendChild(toggleBtn)
+  btnGroup.appendChild(resetBtn)
 
   const viewfinderBtn = document.createElement('button')
   viewfinderBtn.className = 'playback-btn'
   viewfinderBtn.textContent = '⊡ Frame'
 
-  controls.appendChild(toggleBtn)
-  controls.appendChild(resetBtn)
+  controls.appendChild(btnGroup)
   if (opts.viewfinder !== false) {
     controls.appendChild(viewfinderBtn)
   }

@@ -122,6 +122,40 @@ h1.text-2xl {
 .playback-btn:hover {
   background: #f1f5f9;
 }
+/* Button group (play + reset) */
+.playback-btn-group {
+  display: flex;
+}
+.playback-btn-group .playback-btn-left {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  border-right: none;
+}
+.playback-btn-group .playback-btn-left.active {
+  border-right: none;
+}
+.playback-btn-group .playback-btn-right {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  padding-left: 8px;
+  padding-right: 8px;
+  border-left: 1px solid #e2e8f0;
+}
+.playback-btn-group .playback-btn-left.active + .playback-btn-right {
+  background: #175DDC;
+  color: #fff;
+  border-color: #175DDC;
+  border-left-color: #1249b3;
+}
+.playback-btn-group .playback-btn-left.active + .playback-btn-right:hover {
+  background: #1249b3;
+}
+body.dark .playback-btn-group .playback-btn-right {
+  border-left-color: #30363d;
+}
+body.dark .playback-btn-group .playback-btn-left.active + .playback-btn-right {
+  border-left-color: #1249b3;
+}
 .playback-btn.active {
   background: #175DDC;
   color: #fff;
