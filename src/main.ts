@@ -219,6 +219,11 @@ if (embedDiagram && routes[embedDiagram]) {
   toolbar.appendChild(embedLink);
 
   routes[routeName]().then((mod) => mod.default(container, (tl: gsap.core.Timeline, snapshot: Snapshot) => {
+    // Expose timeline + snapshot for automated capture (Playwright)
+    if (params.has('capture')) {
+      (window as any).__capture = { timeline: tl, snapshot };
+    }
+
     const controls = createPlaybackControls(tl, { snapshot });
     controls.style.margin = "0";
     controlsSlot.replaceWith(controls);

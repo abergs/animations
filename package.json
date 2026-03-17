@@ -9,13 +9,15 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build && bun run build:embed",
-    "build:embed": "rm -rf dist/embed && EMBED_ENTRY=handshake vite build --config vite.config.embed.ts && EMBED_ENTRY=agent-access vite build --config vite.config.embed.ts && EMBED_ENTRY=agent-access-arch vite build --config vite.config.embed.ts && EMBED_ENTRY=key-rotation vite build --config vite.config.embed.ts"
+    "build:embed": "rm -rf dist/embed && EMBED_ENTRY=handshake vite build --config vite.config.embed.ts && EMBED_ENTRY=agent-access vite build --config vite.config.embed.ts && EMBED_ENTRY=agent-access-arch vite build --config vite.config.embed.ts && EMBED_ENTRY=key-rotation vite build --config vite.config.embed.ts && EMBED_ENTRY=sdk-key-rotation vite build --config vite.config.embed.ts",
+    "capture": "bun run scripts/capture.ts"
   },
   "dependencies": {
     "gsap": "^3.12.7"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.0",
+    "playwright": "^1.58.2",
     "tailwindcss": "^4.1.0",
     "typescript": "^5.7.3",
     "vite": "^8.0.0"
