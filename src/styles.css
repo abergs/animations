@@ -82,6 +82,14 @@ body.dark .svg-overlay path[stroke="#cbd5e1"] {
   stroke: #30363d;
 }
 
+/* Diagram index cards */
+.diagram-card { --border: #e2e8f0; }
+.diagram-card:hover { background: #f8fafc; }
+.diagram-card:first-child { border-top: 1px solid var(--border); }
+body.dark .diagram-card { --border: #21262d; }
+body.dark .diagram-card:hover { background: #161b22; }
+body.dark .diagram-card-icon { background: #21262d !important; color: #e6edf3 !important; }
+
 /* Base node card styling */
 .flow-node {
   transition: box-shadow 0.3s, border-color 0.3s, background-color 0.4s;

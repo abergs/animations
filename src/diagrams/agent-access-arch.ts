@@ -86,7 +86,7 @@ const icons = {
   ),
 };
 
-export function agentAccessArch(
+export default function agentAccessArch(
   container: HTMLElement,
   onReady?: (tl: gsap.core.Timeline, snapshot: import("../animations/snapshot").Snapshot) => void,
 ) {

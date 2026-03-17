@@ -10,6 +10,7 @@ import {
   resetStatusPills,
 } from "../animations/status";
 import { withTracing } from "../animations/log";
+import { createSnapshot } from "../animations/snapshot";
 
 const { packet, highlight, pulse, statusPill, slideOut } = withTracing({
   packet: _packet,
@@ -156,6 +157,11 @@ export default function agentAccess(
     combinedPath.setAttribute("fill", "none");
     svg.appendChild(combinedPath);
 
+    // Capture initial state for clean reset
+    const snap = createSnapshot()
+      .captureAll(container)
+      .trackSvg(svg);
+
     // --- Animation timeline ---
 
     const tl = gsap.timeline({ repeat: -1, repeatDelay: 2 });
@@ -224,5 +230,7 @@ export default function agentAccess(
     resetLines(tl);
 
     tl.play();
+
+    if (onReady) onReady(tl, snap);
   });
 }

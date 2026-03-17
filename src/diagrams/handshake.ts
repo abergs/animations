@@ -61,7 +61,7 @@ function participant(label: string, iconSvg: string) {
   return node;
 }
 
-export function handshake(
+export default function handshake(
   container: HTMLElement,
   onReady?: (tl: gsap.core.Timeline, snapshot: import("../animations/snapshot").Snapshot) => void,
 ) {
