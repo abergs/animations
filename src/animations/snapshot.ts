@@ -1,4 +1,5 @@
 import type { TrailState } from './trail'
+import { _resetLinesNow } from './effects'
 
 interface PillSnapshot {
   el: HTMLElement
@@ -122,7 +123,7 @@ export class Snapshot {
       el.classList.remove('active', 'done')
     }
 
-    // Clean SVG artifacts
+    // Clean SVG artifacts (packet dots + glow filters)
     for (const svg of this.svgs) {
       svg.querySelectorAll('circle').forEach(c => c.remove())
       svg.querySelectorAll('filter[id^="glow-"]').forEach(f => f.remove())
@@ -131,20 +132,12 @@ export class Snapshot {
     // Reset trails
     for (const state of this.trailStates) {
       for (const o of state.overlays) {
-        const len = o.getTotalLength()
-        o.style.strokeDashoffset = String(len)
+        o.style.strokeDashoffset = o.style.strokeDasharray
       }
     }
 
-    // Reset line colors (from colorLine)
-    for (const svg of this.svgs) {
-      // Lines store their original color as the initial stroke
-      // The effects module handles this via resetLines, but we also
-      // need to clear any inline style.stroke overrides
-      svg.querySelectorAll('path[style*="stroke"]').forEach(p => {
-        (p as SVGPathElement).style.stroke = ''
-      })
-    }
+    // Delegate line color reset to effects module (handles attributes, markers, flipped arrows)
+    _resetLinesNow()
 
     // Custom resets
     for (const fn of this.customResets) {

@@ -261,28 +261,31 @@ export function flipArrow(
   }
 }
 
+/** Synchronous reset of all colored lines and flipped arrows */
+export function _resetLinesNow(): void {
+  for (const [p, orig] of _lineOrigState) {
+    p.setAttribute('stroke', orig.stroke)
+    p.style.stroke = ''
+  }
+  _lineOrigState.clear()
+  for (const [polygon, origFill] of _markerOrigFill) {
+    polygon.setAttribute('fill', origFill)
+  }
+  _markerOrigFill.clear()
+  for (const [p, state] of _flippedArrows) {
+    state.arrow.remove()
+    if (state.origMarkerEnd) p.setAttribute('marker-end', state.origMarkerEnd)
+    if (state.origMarkerStart) p.setAttribute('marker-start', state.origMarkerStart)
+  }
+  _flippedArrows.clear()
+}
+
 /** Reset all colored lines and flipped arrows back to their original state */
 export function resetLines(
   tl: gsap.core.Timeline,
   position?: string | number
 ): void {
-  tl.call(() => {
-    for (const [p, orig] of _lineOrigState) {
-      p.setAttribute('stroke', orig.stroke)
-      p.style.stroke = ''
-    }
-    _lineOrigState.clear()
-    for (const [polygon, origFill] of _markerOrigFill) {
-      polygon.setAttribute('fill', origFill)
-    }
-    _markerOrigFill.clear()
-    for (const [p, state] of _flippedArrows) {
-      state.arrow.remove()
-      if (state.origMarkerEnd) p.setAttribute('marker-end', state.origMarkerEnd)
-      if (state.origMarkerStart) p.setAttribute('marker-start', state.origMarkerStart)
-    }
-    _flippedArrows.clear()
-  }, [], position)
+  tl.call(() => _resetLinesNow(), [], position)
 }
 
 export function fadeOut(

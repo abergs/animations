@@ -42,14 +42,14 @@ const diagram = params.get("diagram");
 const container = document.getElementById("app")!;
 
 if (diagram === "arch") {
-  agentAccessArch(container, (tl, trailState, snapshot) => {
-    const controls = createPlaybackControls(tl, { trailState, snapshot });
+  agentAccessArch(container, (tl, snapshot) => {
+    const controls = createPlaybackControls(tl, { snapshot });
     controls.style.margin = "0";
     controlsSlot.replaceWith(controls);
   });
 } else if (diagram === "handshake") {
-  handshake(container, (tl, trailState, snapshot) => {
-    const controls = createPlaybackControls(tl, { trailState, snapshot });
+  handshake(container, (tl, snapshot) => {
+    const controls = createPlaybackControls(tl, { snapshot });
     controls.style.margin = "0";
     controlsSlot.replaceWith(controls);
   });

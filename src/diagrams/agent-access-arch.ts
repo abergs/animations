@@ -17,17 +17,13 @@ import { packet as _packet } from "../animations/packet";
 import {
   highlight as _highlight,
   pulse as _pulse,
-  colorLine,
-  resetLines,
 } from "../animations/effects";
 import {
   statusPill as _statusPill,
   slideOut as _slideOut,
-  resetStatusPills,
 } from "../animations/status";
 import {
   packetWithTrail as _packetWithTrail,
-  resetTrails,
   createTrailState,
 } from "../animations/trail";
 import { createSnapshot } from "../animations/snapshot";
@@ -92,7 +88,7 @@ const icons = {
 
 export function agentAccessArch(
   container: HTMLElement,
-  onReady?: (tl: gsap.core.Timeline, trailState: import("../animations/trail").TrailState, snapshot: import("../animations/snapshot").Snapshot) => void,
+  onReady?: (tl: gsap.core.Timeline, snapshot: import("../animations/snapshot").Snapshot) => void,
 ) {
   // --- Consumer nodes ---
   const claude = cn("Claude", {
@@ -374,7 +370,7 @@ export function agentAccessArch(
     tl.play();
 
     // Wire playback controls if a toolbar was provided
-    if (onReady) onReady(tl, trailState, snap);
+    if (onReady) onReady(tl, snap);
   }); // end inner RAF (arrows)
   }); // end outer RAF (group widths)
 }

@@ -129,6 +129,8 @@ export function createPlaybackControls(
     })
   }
 
+  let viewfinderAbort: AbortController | null = null
+
   function showViewfinder(rect?: { left: number; top: number; width: number; height: number }) {
     viewfinderEl = document.createElement('div')
     viewfinderEl.className = 'viewfinder-overlay'
@@ -138,6 +140,10 @@ export function createPlaybackControls(
       viewfinderEl.style.width = rect.width + 'px'
       viewfinderEl.style.height = rect.height + 'px'
     }
+
+    // AbortController for all document-level listeners (cleaned up on hide)
+    viewfinderAbort = new AbortController()
+    const { signal } = viewfinderAbort
 
     // Drag to reposition
     let dragging = false
@@ -157,36 +163,55 @@ export function createPlaybackControls(
       e.preventDefault()
     })
 
-    document.addEventListener('mousemove', (e) => {
-      if (!dragging || !viewfinderEl) return
-      const newLeft = e.clientX - offsetX
-      const newTop = e.clientY - offsetY
-      if (e.shiftKey) {
-        if (Math.abs(newLeft - dragStartLeft) > Math.abs(newTop - dragStartTop)) {
-          viewfinderEl.style.left = newLeft + 'px'
-        } else {
-          viewfinderEl.style.top = newTop + 'px'
-        }
-      } else {
-        viewfinderEl.style.left = newLeft + 'px'
-        viewfinderEl.style.top = newTop + 'px'
-      }
-    })
-
-    document.addEventListener('mouseup', () => {
-      if (dragging) { dragging = false; saveViewfinder() }
-    })
-
-    // Resize handle
-    const handle = document.createElement('div')
-    handle.className = 'viewfinder-handle'
-    viewfinderEl.appendChild(handle)
-
+    // Resize state
     let resizing = false
     let startW = 0
     let startH = 0
     let startX = 0
     let startY = 0
+
+    // Single mousemove handler for both drag and resize
+    document.addEventListener('mousemove', (e) => {
+      if (dragging && viewfinderEl) {
+        const newLeft = e.clientX - offsetX
+        const newTop = e.clientY - offsetY
+        if (e.shiftKey) {
+          if (Math.abs(newLeft - dragStartLeft) > Math.abs(newTop - dragStartTop)) {
+            viewfinderEl.style.left = newLeft + 'px'
+          } else {
+            viewfinderEl.style.top = newTop + 'px'
+          }
+        } else {
+          viewfinderEl.style.left = newLeft + 'px'
+          viewfinderEl.style.top = newTop + 'px'
+        }
+      }
+      if (resizing && viewfinderEl) {
+        const dw = e.clientX - startX
+        const dh = e.clientY - startY
+        if (e.shiftKey) {
+          if (Math.abs(dw) > Math.abs(dh)) {
+            viewfinderEl.style.width = Math.max(100, startW + dw) + 'px'
+          } else {
+            viewfinderEl.style.height = Math.max(100, startH + dh) + 'px'
+          }
+        } else {
+          viewfinderEl.style.width = Math.max(100, startW + dw) + 'px'
+          viewfinderEl.style.height = Math.max(100, startH + dh) + 'px'
+        }
+      }
+    }, { signal })
+
+    // Single mouseup handler
+    document.addEventListener('mouseup', () => {
+      if (dragging) { dragging = false; saveViewfinder() }
+      if (resizing) { resizing = false; saveViewfinder() }
+    }, { signal })
+
+    // Resize handle
+    const handle = document.createElement('div')
+    handle.className = 'viewfinder-handle'
+    viewfinderEl.appendChild(handle)
 
     handle.addEventListener('mousedown', (e) => {
       resizing = true
@@ -196,26 +221,6 @@ export function createPlaybackControls(
       startY = e.clientY
       e.preventDefault()
       e.stopPropagation()
-    })
-
-    document.addEventListener('mousemove', (e) => {
-      if (!resizing || !viewfinderEl) return
-      const dw = e.clientX - startX
-      const dh = e.clientY - startY
-      if (e.shiftKey) {
-        if (Math.abs(dw) > Math.abs(dh)) {
-          viewfinderEl.style.width = Math.max(100, startW + dw) + 'px'
-        } else {
-          viewfinderEl.style.height = Math.max(100, startH + dh) + 'px'
-        }
-      } else {
-        viewfinderEl.style.width = Math.max(100, startW + dw) + 'px'
-        viewfinderEl.style.height = Math.max(100, startH + dh) + 'px'
-      }
-    })
-
-    document.addEventListener('mouseup', () => {
-      if (resizing) { resizing = false; saveViewfinder() }
     })
 
     // Bottom toolbar
@@ -239,16 +244,18 @@ export function createPlaybackControls(
 
     viewfinderEl.appendChild(toolbar)
 
+    // Size label with proper RAF cleanup
+    let rafId = 0
     const updateSize = () => {
       if (!viewfinderEl) return
-      const w = viewfinderEl.offsetWidth
-      const h = viewfinderEl.offsetHeight
-      sizeLabel.textContent = `${w} × ${h}`
-      requestAnimationFrame(updateSize)
+      sizeLabel.textContent = `${viewfinderEl.offsetWidth} × ${viewfinderEl.offsetHeight}`
+      rafId = requestAnimationFrame(updateSize)
     }
-    // Set initial size text synchronously, then keep updating
     sizeLabel.textContent = `${parseInt(viewfinderEl.style.width)} × ${parseInt(viewfinderEl.style.height)}`
-    requestAnimationFrame(updateSize)
+    rafId = requestAnimationFrame(updateSize)
+
+    // Store RAF cancel for cleanup
+    ;(viewfinderEl as any)._rafId = rafId
 
     document.body.appendChild(viewfinderEl)
     viewfinderBtn.classList.add('active')
@@ -256,6 +263,9 @@ export function createPlaybackControls(
 
   viewfinderBtn.addEventListener('click', () => {
     if (viewfinderEl) {
+      cancelAnimationFrame((viewfinderEl as any)._rafId)
+      viewfinderAbort?.abort()
+      viewfinderAbort = null
       viewfinderEl.remove()
       viewfinderEl = null
       viewfinderBtn.classList.remove('active')

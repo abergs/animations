@@ -7,14 +7,11 @@ import { packet as _packet } from "../animations/packet";
 import {
   highlight as _highlight,
   pulse as _pulse,
-  resetLines,
 } from "../animations/effects";
 import {
   statusPill as _statusPill,
-  resetStatusPills,
 } from "../animations/status";
 import {
-  resetTrails,
   createTrailState,
 } from "../animations/trail";
 import { createSnapshot } from "../animations/snapshot";
@@ -66,7 +63,7 @@ function participant(label: string, iconSvg: string) {
 
 export function handshake(
   container: HTMLElement,
-  onReady?: (tl: gsap.core.Timeline, trailState: import("../animations/trail").TrailState, snapshot: import("../animations/snapshot").Snapshot) => void,
+  onReady?: (tl: gsap.core.Timeline, snapshot: import("../animations/snapshot").Snapshot) => void,
 ) {
   // === Participant ghost nodes per phase (each phase gets its own set) ===
   const p1Remote = participant("Remote Agent", icons.terminal);
@@ -483,7 +480,7 @@ export function handshake(
     snap.reset(tl);
 
     tl.play();
-    if (onReady) onReady(tl, trailState, snap);
+    if (onReady) onReady(tl, snap);
   }); // inner RAF
   }); // outer RAF
 }
