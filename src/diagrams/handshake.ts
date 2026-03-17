@@ -17,6 +17,7 @@ import {
   resetTrails,
   createTrailState,
 } from "../animations/trail";
+import { createSnapshot } from "../animations/snapshot";
 import { withTracing } from "../animations/log";
 
 const { packet, highlight, pulse, statusPill } = withTracing({
@@ -65,7 +66,7 @@ function participant(label: string, iconSvg: string) {
 
 export function handshake(
   container: HTMLElement,
-  onReady?: (tl: gsap.core.Timeline, trailState: import("../animations/trail").TrailState) => void,
+  onReady?: (tl: gsap.core.Timeline, trailState: import("../animations/trail").TrailState, snapshot: import("../animations/snapshot").Snapshot) => void,
 ) {
   // === Participant ghost nodes per phase (each phase gets its own set) ===
   const p1Remote = participant("Remote Agent", icons.terminal);
@@ -93,6 +94,7 @@ export function handshake(
       { text: "Proxy sends 32-byte challenge to each client" },
       { text: "Clients sign challenge with identity key", detail: "COSE_Sign1 · Ed25519" },
       { text: "Proxy verifies signatures, authenticates both sides" },
+      { text: "Both identities confirmed — ready for discovery" },
     ],
     { borderColor: "#175DDC40", labelColor: "#175DDC", description: "Both devices prove their identity to the proxy using cryptographic signatures. No passwords or tokens — just public key cryptography." },
   );
@@ -108,6 +110,7 @@ export function handshake(
       { text: "Remote sends code to proxy", detail: "GetIdentity(code)" },
       { text: "Proxy returns user's identity + fingerprint" },
       { text: "User verifies fingerprint to confirm peer" },
+      { text: "Both peers discovered — ready for encryption" },
     ],
     { borderColor: "#10b98140", labelColor: "#10b981", description: "The user device asks the proxy to generate a short-lived rendezvous code. The user shares this code out-of-band with the remote agent, who sends it back to the proxy to discover the user's identity." },
   );
@@ -126,6 +129,7 @@ export function handshake(
       { text: "User shares token with remote agent (out-of-band)" },
       { text: "Remote parses PSK + fingerprint from token" },
       { text: "No fingerprint verification needed", detail: "Trust via shared secret" },
+      { text: "Both peers discovered — ready for encryption" },
     ],
     { borderColor: "#10b98140", labelColor: "#10b981", description: "The user device generates a PSK token containing a secret and their fingerprint. Shared via QR code, NFC, or secure message. No rendezvous code or fingerprint verification needed." },
   );
@@ -167,6 +171,7 @@ export function handshake(
       { text: "Proxy relays message (cannot read it)" },
       { text: "User responds with DH result", detail: "Noise msg2 · derives keys" },
       { text: "Both sides derive 4 symmetric keys", detail: "XChaCha20Poly1305" },
+      { text: "E2E tunnel established — proxy cannot decrypt" },
     ],
     { borderColor: "#8b5cf640", labelColor: "#8b5cf6", description: "A Noise NNpsk2 handshake establishes end-to-end encryption. The proxy relays the messages but can never read them." },
   );
@@ -181,6 +186,7 @@ export function handshake(
       { text: "User encrypts credential + sends response", detail: "CredentialResponse { data }" },
       { text: "Remote decrypts and receives credential" },
       { text: "Session cached for reconnection", detail: "MultiDeviceTransport · random nonces" },
+      { text: "Credential delivered — session ready for reuse" },
     ],
     { borderColor: "#f59e0b40", labelColor: "#f59e0b", description: "Credentials flow through the encrypted tunnel. The user approves each request. Sessions are cached with random nonces for multi-device support." },
   );
@@ -243,10 +249,6 @@ export function handshake(
         else { s.classList.remove('active'); s.classList.add('done'); }
       });
     }
-    function resetSteps(tl: gsap.core.Timeline) {
-      tl.call(() => { for (const s of allSteps) s.classList.remove('active', 'done'); });
-    }
-
     // Consistent packet speed
     const spd = 0.7;
     const pause = 0.5;
@@ -254,6 +256,12 @@ export function handshake(
 
     // --- Animation ---
     const trailState = createTrailState();
+
+    // Capture initial state for clean reset
+    const snap = createSnapshot()
+      .captureAll(container)
+      .trackSvg(svg)
+      .trackTrails(trailState);
     const tl = gsap.timeline({ repeat: -1, repeatDelay: 3 });
     const blue = "#175DDC";
     const green = "#10b981";
@@ -303,6 +311,11 @@ export function handshake(
     statusPill(tl, p1Proxy, "Both verified ✓", { color: green });
     highlight(tl, p1Proxy, { color: green });
     step(tl, p1Steps[3], 'done');
+
+    // Success
+    step(tl, p1Steps[4], 'active');
+    tl.to({}, { duration: 0.4 });
+    step(tl, p1Steps[4], 'done');
     tl.to({}, { duration: phasePause });
 
     // ──── PHASE 2: DISCOVER (Rendezvous flow) ────
@@ -354,6 +367,11 @@ export function handshake(
     statusPill(tl, p2User, "Verified ✓", { color: green });
     highlight(tl, p2User, { color: green });
     step(tl, p2Steps[5], 'done');
+
+    // Success
+    step(tl, p2Steps[6], 'active');
+    tl.to({}, { duration: 0.4 });
+    step(tl, p2Steps[6], 'done');
     tl.to({}, { duration: phasePause });
 
     // ──── PHASE 3: ENCRYPT ────
@@ -393,6 +411,11 @@ export function handshake(
     highlight(tl, p3Remote, { color: green });
     highlight(tl, p3User, { color: green });
     step(tl, p3Steps[3], 'done');
+
+    // Success
+    step(tl, p3Steps[4], 'active');
+    tl.to({}, { duration: 0.4 });
+    step(tl, p3Steps[4], 'done');
     tl.to({}, { duration: phasePause });
 
     // ──── PHASE 4: CREDENTIAL EXCHANGE ────
@@ -449,16 +472,18 @@ export function handshake(
     statusPill(tl, p4Proxy, "Multi-device ✓", { color: green });
     step(tl, p4Steps[5], 'done');
 
+    // Success
+    step(tl, p4Steps[6], 'active');
+    tl.to({}, { duration: 0.4 });
+    step(tl, p4Steps[6], 'done');
+
     tl.to({}, { duration: 3 });
 
-    // Reset
-    resetSteps(tl);
-    resetStatusPills(tl);
-    resetLines(tl);
-    resetTrails(tl, trailState);
+    // Reset everything before next loop
+    snap.reset(tl);
 
     tl.play();
-    if (onReady) onReady(tl, trailState);
+    if (onReady) onReady(tl, trailState, snap);
   }); // inner RAF
   }); // outer RAF
 }

@@ -1,4 +1,5 @@
 import type { TrailState } from '../animations/trail'
+import type { Snapshot } from '../animations/snapshot'
 
 const STORAGE_KEY = 'playback-state'
 
@@ -27,6 +28,8 @@ export interface PlaybackOptions {
   autoplay?: boolean
   /** Trail state to reset when clicking reset */
   trailState?: TrailState
+  /** Snapshot for full state restore on reset */
+  snapshot?: Snapshot
   /** Additional reset callback */
   onReset?: () => void
   /** Show viewfinder button (default: true) */
@@ -89,7 +92,10 @@ export function createPlaybackControls(
     tl.pause()
     tl.progress(0)
 
-    if (opts.trailState) {
+    // Use snapshot if available, otherwise fall back to manual trail reset
+    if (opts.snapshot) {
+      opts.snapshot.restoreNow()
+    } else if (opts.trailState) {
       for (const o of opts.trailState.overlays) {
         const len = o.getTotalLength()
         o.style.strokeDashoffset = String(len)

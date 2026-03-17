@@ -29,3 +29,5 @@ export type { StatusOptions, StatusPillOptions, SlideOutOptions } from './animat
 
 export { packetWithTrail, resetTrails, createTrailState } from './animations/trail'
 export type { TrailOptions, TrailState } from './animations/trail'
+
+export { createSnapshot, Snapshot } from './animations/snapshot'

@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "bunx tsc && bunx vite build"
+    "build": "tsc && vite build"
   },
   "dependencies": {
     "gsap": "^3.12.7"

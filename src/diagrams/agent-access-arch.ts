@@ -30,6 +30,7 @@ import {
   resetTrails,
   createTrailState,
 } from "../animations/trail";
+import { createSnapshot } from "../animations/snapshot";
 import { withTracing } from "../animations/log";
 
 const { packet, highlight, pulse, statusPill, slideOut } = withTracing({
@@ -91,7 +92,7 @@ const icons = {
 
 export function agentAccessArch(
   container: HTMLElement,
-  onReady?: (tl: gsap.core.Timeline, trailState: import("../animations/trail").TrailState) => void,
+  onReady?: (tl: gsap.core.Timeline, trailState: import("../animations/trail").TrailState, snapshot: import("../animations/snapshot").Snapshot) => void,
 ) {
   // --- Consumer nodes ---
   const claude = cn("Claude", {
@@ -339,6 +340,12 @@ export function agentAccessArch(
     const trail = (path: SVGPathElement, color: string, target?: HTMLElement) =>
       _packetWithTrail(tl, path, trailState, { color }, target);
 
+    // Capture initial state for clean reset
+    const snap = createSnapshot()
+      .captureAll(container)
+      .trackSvg(svg)
+      .trackTrails(trailState);
+
     // --- Animation: packet flows down left side, up right side ---
     const tl = gsap.timeline({ repeat: -1, repeatDelay: 2 });
 
@@ -361,14 +368,13 @@ export function agentAccessArch(
 
     tl.to({}, { duration: 1.5 });
 
-    // Reset
-    resetTrails(tl, trailState);
-    resetStatusPills(tl);
+    // Reset everything before next loop
+    snap.reset(tl);
 
     tl.play();
 
     // Wire playback controls if a toolbar was provided
-    if (onReady) onReady(tl, trailState);
+    if (onReady) onReady(tl, trailState, snap);
   }); // end inner RAF (arrows)
   }); // end outer RAF (group widths)
 }
