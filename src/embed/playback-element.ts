@@ -212,19 +212,34 @@ class PlaybackElement extends HTMLElement {
       btn.textContent = displayName;
       btn.title = `Seek to ${name} (${(time as number).toFixed(1)}s)`;
       btn.addEventListener("click", () => {
-        if (!this.timeline) return;
-        this.timeline.seek(name, false);
-        this.timeline.pause();
-        this.playing = false;
-        if (this.toggleBtn) {
-          this.toggleBtn.textContent = "\u25B6 Play";
-          this.toggleBtn.classList.remove("active");
-        }
+        this.seekTo(name);
         this.clearLabelActive();
         btn.classList.add("active");
       });
       this.labelButtons.push(btn);
       this.controls.appendChild(btn);
+    }
+  }
+
+  /** Reset diagram to initial state, then seek forward so all callbacks fire correctly. */
+  private seekTo(target: string | number) {
+    if (!this.timeline) return;
+
+    // Restore snapshot to clear all animation side-effects
+    if (this.diagram?.snapshot) {
+      this.diagram.snapshot.restoreNow();
+    }
+
+    // Seek from the start with suppressEvents=false so callbacks
+    // (statusPill, colorLine, etc.) fire up to the target point
+    this.timeline.pause();
+    this.timeline.seek(0, true);
+    this.timeline.seek(target, false);
+
+    this.playing = false;
+    if (this.toggleBtn) {
+      this.toggleBtn.textContent = "\u25B6 Play";
+      this.toggleBtn.classList.remove("active");
     }
   }
 

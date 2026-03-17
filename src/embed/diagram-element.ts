@@ -171,10 +171,8 @@ export function defineDiagram(tagName: string, diagramFn: DiagramFn) {
       if (raw == null) return;
       const p = Math.max(0, Math.min(1, Number(raw)));
       if (isNaN(p)) return;
-      // Use the single-iteration duration (not totalDuration which is infinite for repeat:-1)
       const time = p * this.timeline.duration();
-      this.timeline.seek(time, false);
-      this.timeline.pause();
+      this.seekTo(time);
     }
 
     /** Seek to a named label or numeric time (seconds). */
@@ -184,12 +182,16 @@ export function defineDiagram(tagName: string, diagramFn: DiagramFn) {
       if (at == null) return;
 
       const num = Number(at);
-      if (!isNaN(num)) {
-        this.timeline.seek(num, false);
-      } else {
-        this.timeline.seek(at, false);
-      }
+      this.seekTo(!isNaN(num) ? num : at);
+    }
+
+    /** Reset diagram to initial state, then seek forward so all callbacks fire correctly. */
+    private seekTo(target: string | number) {
+      if (!this.timeline) return;
+      if (this.snapshot) this.snapshot.restoreNow();
       this.timeline.pause();
+      this.timeline.seek(0, true);
+      this.timeline.seek(target, false);
     }
 
     private applyMode(mode: string) {
