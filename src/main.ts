@@ -52,7 +52,148 @@ document.body.prepend(toolbar);
 const container = document.getElementById("app")!;
 const routeName = window.location.pathname.replace(/^\//, "").replace(/\/$/, "");
 
-if (routeName && routes[routeName]) {
+// Check if this is an embed page: "agent-access/embed" → diagram="agent-access"
+const embedMatch = routeName.match(/^(.+)\/embed$/);
+const embedDiagram = embedMatch?.[1];
+
+if (embedDiagram && routes[embedDiagram]) {
+  const formatLabel = (s: string) => s.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+  document.title = `Embed ${formatLabel(embedDiagram)} — Diagram Animations`;
+
+  const baseUrl = "https://animations.andersaberg.com";
+  const tagName = `bw-diagram-${embedDiagram}`;
+  const scriptUrl = `${baseUrl}/embed/${embedDiagram}.js`;
+
+  container.innerHTML = `
+    <div style="max-width: 960px; margin: 0 auto; padding-top: 2rem;">
+      <h1 style="font-size: 1.5rem; font-weight: 700; letter-spacing: -0.03em; margin-bottom: 0.25rem;"
+          class="text-slate-800">
+        Embed: ${formatLabel(embedDiagram)}
+      </h1>
+      <p style="font-size: 0.9rem; margin-bottom: 2rem;"
+         class="text-slate-500">
+        Add this diagram to any page with a single script tag.
+      </p>
+
+      <h2 style="font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;"
+          class="text-slate-400">Basic usage</h2>
+      <pre class="embed-code-block" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 1rem 1.25rem; font-size: 0.8rem; line-height: 1.6; overflow-x: auto; margin-bottom: 1.5rem; position: relative;"><code>&lt;script src="${scriptUrl}"&gt;&lt;/script&gt;
+&lt;${tagName}&gt;&lt;/${tagName}&gt;</code></pre>
+
+      <h2 style="font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;"
+          class="text-slate-400">With external playback controls</h2>
+      <pre class="embed-code-block" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 1rem 1.25rem; font-size: 0.8rem; line-height: 1.6; overflow-x: auto; margin-bottom: 1.5rem; position: relative;"><code>&lt;script src="${scriptUrl}"&gt;&lt;/script&gt;
+&lt;bw-playback for="demo" mode="auto" labels&gt;&lt;/bw-playback&gt;
+&lt;${tagName} id="demo" mode="auto"&gt;&lt;/${tagName}&gt;</code></pre>
+
+      <h2 style="font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;"
+          class="text-slate-400">Static screenshot (paused at a specific point)</h2>
+      <pre class="embed-code-block" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 1rem 1.25rem; font-size: 0.8rem; line-height: 1.6; overflow-x: auto; margin-bottom: 1.5rem; position: relative;"><code>&lt;script src="${scriptUrl}"&gt;&lt;/script&gt;
+
+&lt;!-- Paused at a named label --&gt;
+&lt;${tagName} paused at="approval"&gt;&lt;/${tagName}&gt;
+
+&lt;!-- Paused at a specific time (seconds) --&gt;
+&lt;${tagName} paused at="3.5"&gt;&lt;/${tagName}&gt;</code></pre>
+
+      <h2 style="font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;"
+          class="text-slate-400">Attributes</h2>
+      <table style="width: 100%; font-size: 0.85rem; border-collapse: collapse; margin-bottom: 2rem;">
+        <thead>
+          <tr style="border-bottom: 2px solid #e2e8f0;">
+            <th style="text-align: left; padding: 6px 8px; font-weight: 600;" class="text-slate-600">Attribute</th>
+            <th style="text-align: left; padding: 6px 8px; font-weight: 600;" class="text-slate-600">Values</th>
+            <th style="text-align: left; padding: 6px 8px; font-weight: 600;" class="text-slate-600">Description</th>
+          </tr>
+        </thead>
+        <tbody class="text-slate-600">
+          <tr style="border-bottom: 1px solid #e2e8f0;">
+            <td style="padding: 6px 8px;"><code style="background: #f1f5f9; padding: 1px 6px; border-radius: 4px; font-size: 0.8rem;">mode</code></td>
+            <td style="padding: 6px 8px;"><code style="background: #f1f5f9; padding: 1px 6px; border-radius: 4px; font-size: 0.75rem;">light</code> <code style="background: #f1f5f9; padding: 1px 6px; border-radius: 4px; font-size: 0.75rem;">dark</code> <code style="background: #f1f5f9; padding: 1px 6px; border-radius: 4px; font-size: 0.75rem;">auto</code></td>
+            <td style="padding: 6px 8px;">Color theme. <code style="background: #f1f5f9; padding: 1px 6px; border-radius: 4px; font-size: 0.75rem;">auto</code> follows <code style="background: #f1f5f9; padding: 1px 6px; border-radius: 4px; font-size: 0.75rem;">prefers-color-scheme</code></td>
+          </tr>
+          <tr style="border-bottom: 1px solid #e2e8f0;">
+            <td style="padding: 6px 8px;"><code style="background: #f1f5f9; padding: 1px 6px; border-radius: 4px; font-size: 0.8rem;">paused</code></td>
+            <td style="padding: 6px 8px;">boolean</td>
+            <td style="padding: 6px 8px;">Start paused instead of autoplaying</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #e2e8f0;">
+            <td style="padding: 6px 8px;"><code style="background: #f1f5f9; padding: 1px 6px; border-radius: 4px; font-size: 0.8rem;">at</code></td>
+            <td style="padding: 6px 8px;">label or seconds</td>
+            <td style="padding: 6px 8px;">Seek to a timeline label or time, e.g. <code style="background: #f1f5f9; padding: 1px 6px; border-radius: 4px; font-size: 0.75rem;">at="phase2"</code> or <code style="background: #f1f5f9; padding: 1px 6px; border-radius: 4px; font-size: 0.75rem;">at="3.5"</code>. Implies paused.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2 style="font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1rem;"
+          class="text-slate-400">Live preview</h2>
+      <div id="embed-preview-controls" style="display: flex; gap: 6px; margin-bottom: 1rem;"></div>
+      <div id="embed-preview" style="border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.5rem; transition: background-color 0.3s; margin-bottom: 2rem;"></div>
+    </div>
+  `;
+
+  // Build preview controls (mode switcher only — playback is inside the embed)
+  const previewControls = container.querySelector("#embed-preview-controls")!;
+  const previewBox = container.querySelector("#embed-preview") as HTMLElement;
+  let currentMode = "auto";
+
+  for (const mode of ["auto", "light", "dark"]) {
+    const btn = document.createElement("button");
+    btn.className = `playback-btn${mode === "auto" ? " active" : ""}`;
+    btn.textContent = mode.charAt(0).toUpperCase() + mode.slice(1);
+    btn.addEventListener("click", () => {
+      currentMode = mode;
+      previewControls.querySelectorAll("button").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      updatePreview();
+    });
+    previewControls.appendChild(btn);
+  }
+
+  function updatePreview() {
+    const isDarkPreview = currentMode === "dark" ||
+      (currentMode === "auto" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    previewBox.style.backgroundColor = isDarkPreview ? "#0d1117" : "#ffffff";
+    previewBox.style.borderColor = isDarkPreview ? "#30363d" : "#e2e8f0";
+
+    // Recreate the iframe to reload with new mode
+    previewBox.innerHTML = "";
+    const iframe = document.createElement("iframe");
+    iframe.style.cssText = "width: 100%; border: none; min-height: 500px;";
+
+    if (import.meta.env.DEV) {
+      iframe.src = `/embed-preview.html#diagram=${embedDiagram}&mode=${currentMode}`;
+    } else {
+      iframe.srcdoc = `<!DOCTYPE html>
+<html><head>
+<meta charset="UTF-8">
+<style>body { margin: 0; background: ${isDarkPreview ? "#0d1117" : "#ffffff"}; }</style>
+</head><body>
+<script src="/embed/${embedDiagram}.js"><\/script>
+<bw-playback for="demo" mode="${currentMode}" labels></bw-playback>
+<${tagName} id="demo" mode="${currentMode}"></${tagName}>
+</body></html>`;
+    }
+    previewBox.appendChild(iframe);
+
+    // Auto-resize iframe to content height
+    iframe.addEventListener("load", () => {
+      const resize = () => {
+        try {
+          const h = iframe.contentDocument?.documentElement.scrollHeight;
+          if (h) iframe.style.height = h + "px";
+        } catch { /* cross-origin guard */ }
+      };
+      resize();
+      // Re-check after animations have laid out
+      setTimeout(resize, 500);
+      setTimeout(resize, 1500);
+    });
+  }
+
+  updatePreview();
+
+} else if (routeName && routes[routeName]) {
   // Add playback controls slot to toolbar for diagram pages
   const controlsSlot = document.createElement("div");
   controlsSlot.className = "playback-controls";
@@ -69,6 +210,13 @@ if (routeName && routes[routeName]) {
   editLink.className = "playback-btn";
   editLink.textContent = "✎ Edit";
   toolbar.appendChild(editLink);
+
+  // Embed button
+  const embedLink = document.createElement("a");
+  embedLink.href = `/${routeName}/embed`;
+  embedLink.className = "playback-btn";
+  embedLink.textContent = "</> Embed";
+  toolbar.appendChild(embedLink);
 
   routes[routeName]().then((mod) => mod.default(container, (tl: gsap.core.Timeline, snapshot: Snapshot) => {
     const controls = createPlaybackControls(tl, { snapshot });

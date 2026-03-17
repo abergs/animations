@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Embed Test</title>
+  <style>
+    body { font-family: system-ui; max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
+    h1 { font-size: 1.5rem; }
+    h2 { font-size: 1.1rem; margin-top: 2rem; color: #475569; }
+    hr { border: none; border-top: 1px solid #e2e8f0; margin: 2rem 0; }
+    .dark-bg { background: #0d1117; padding: 1.5rem; border-radius: 12px; }
+  </style>
+</head>
+<body>
+  <h1>Embed Test Page</h1>
+  <p>This page loads diagram web components via <code>&lt;script&gt;</code> tags.</p>
+
+  <hr>
+
+  <h2>Light mode (default)</h2>
+  <bw-diagram-agent-access></bw-diagram-agent-access>
+
+  <hr>
+
+  <h2>Dark mode</h2>
+  <div class="dark-bg">
+    <bw-diagram-agent-access mode="dark"></bw-diagram-agent-access>
+  </div>
+
+  <hr>
+
+  <h2>Auto mode (follows OS preference)</h2>
+  <bw-diagram-agent-access mode="auto"></bw-diagram-agent-access>
+
+  <hr>
+
+  <h2>With external playback controls</h2>
+  <bw-diagram-agent-access id="my-diagram" mode="auto"></bw-diagram-agent-access>
+  <bw-playback for="my-diagram" mode="auto"></bw-playback>
+
+  <!-- Load the embed script -->
+  <script src="./dist/embed/agent-access.js"></script>
+</body>
+</html>

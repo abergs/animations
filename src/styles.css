@@ -1,4 +1,8 @@
 @import "tailwindcss";
+@import "./styles/diagram.css";
+@import "./styles/diagram-dark.css";
+
+/* ===== Site-only styles (not included in embeds) ===== */
 
 /* Top toolbar */
 .top-toolbar {
@@ -30,56 +34,9 @@ body.dark {
   color: #e6edf3;
 }
 
-/* Dark mode: all text */
-body.dark h1 {
-  color: #f0f6fc !important;
-}
-body.dark p, body.dark span, body.dark div {
-  color: inherit;
-}
-body.dark .text-slate-800 {
-  color: #f0f6fc !important;
-}
-body.dark .text-slate-500 {
-  color: #8b949e !important;
-}
-body.dark .text-slate-400 {
-  color: #8b949e !important;
-}
-
-/* Dark mode: node cards */
-body.dark .flow-node {
-  background-color: #161b22 !important;
-  border-color: #30363d !important;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.4);
-}
-
-/* Dark mode: group labels */
-body.dark .bg-white {
-  background-color: #0d1117 !important;
-}
-
-/* Dark mode: ghost nodes */
-body.dark .flow-node[style*="border-style: dashed"] {
-  background-color: transparent !important;
-  border-color: #30363d !important;
-}
-
-/* Dark mode: status pills — boost contrast */
-body.dark .status-pill,
-body.dark .status-pill-anno {
-  filter: brightness(1.6) saturate(0.9);
-}
-
-/* Dark mode: slide-out card */
-body.dark .flow-slideout {
-  background-color: #161b22 !important;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.5);
-}
-
-/* Dark mode: SVG arrow lines */
-body.dark .svg-overlay path[stroke="#cbd5e1"] {
-  stroke: #30363d;
+/* Title typography */
+h1.text-2xl {
+  letter-spacing: -0.02em;
 }
 
 /* Diagram index cards */
@@ -90,89 +47,27 @@ body.dark .diagram-card { --border: #21262d; }
 body.dark .diagram-card:hover { background: #161b22; }
 body.dark .diagram-card-icon { background: #21262d !important; color: #e6edf3 !important; }
 
-/* Base node card styling */
-.flow-node {
-  transition: box-shadow 0.3s, border-color 0.3s, background-color 0.4s;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.06);
-}
-
-/* Title typography */
-h1.text-2xl {
-  letter-spacing: -0.02em;
-}
-
-/* Playback controls */
-.playback-controls {
-  display: flex;
-  justify-content: center;
-  gap: 6px;
-  margin-bottom: 1.5rem;
-}
-.playback-btn {
-  padding: 5px 14px;
-  border-radius: 8px;
-  font-size: 0.75rem;
-  font-weight: 500;
-  cursor: pointer;
-  border: 1px solid #e2e8f0;
-  background: #fff;
-  color: #475569;
-  transition: all 0.15s;
-}
-.playback-btn:hover {
-  background: #f1f5f9;
-}
-/* Button group (play + reset) */
-.playback-btn-group {
-  display: flex;
-}
-.playback-btn-group .playback-btn-left {
-  border-top-right-radius: 0;
-  border-bottom-right-radius: 0;
-  border-right: none;
-}
-.playback-btn-group .playback-btn-left.active {
-  border-right: none;
-}
-.playback-btn-group .playback-btn-right {
-  border-top-left-radius: 0;
-  border-bottom-left-radius: 0;
-  padding-left: 8px;
-  padding-right: 8px;
-  border-left: 1px solid #e2e8f0;
-}
-.playback-btn-group .playback-btn-left.active + .playback-btn-right {
-  background: #175DDC;
-  color: #fff;
-  border-color: #175DDC;
-  border-left-color: #1249b3;
-}
-.playback-btn-group .playback-btn-left.active + .playback-btn-right:hover {
-  background: #1249b3;
-}
-body.dark .playback-btn-group .playback-btn-right {
-  border-left-color: #30363d;
-}
-body.dark .playback-btn-group .playback-btn-left.active + .playback-btn-right {
-  border-left-color: #1249b3;
-}
-.playback-btn.active {
-  background: #175DDC;
-  color: #fff;
-  border-color: #175DDC;
-}
-body.dark .playback-btn {
-  background: #21262d;
+/* Embed page code blocks */
+body.dark .embed-code-block {
+  background: #161b22 !important;
+  border-color: #30363d !important;
   color: #e6edf3;
-  border-color: #30363d;
 }
-body.dark .playback-btn:hover {
-  background: #30363d;
+body.dark .embed-code-block code {
+  color: #e6edf3;
 }
-body.dark .playback-btn.active {
-  background: #175DDC;
-  color: #fff;
-  border-color: #175DDC;
+body.dark table th {
+  color: #e6edf3 !important;
+}
+body.dark table td {
+  color: #c9d1d9 !important;
+}
+body.dark table td code {
+  background: #21262d !important;
+  color: #e6edf3 !important;
+}
+body.dark table tr {
+  border-color: #21262d !important;
 }
 
 /* Viewfinder overlay */
@@ -256,230 +151,4 @@ body.dark .viewfinder-toolbar-btn:hover {
 }
 body.dark .viewfinder-size {
   color: #58a6ff;
-}
-
-/* Phase label bar */
-.phase-label-bar {
-  position: absolute;
-  top: -0.75rem;
-  left: 1rem;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 0.125rem 0.25rem;
-  border-radius: 0.25rem;
-  background: #fff;
-  z-index: 1;
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-body.dark .phase-label-bar {
-  background: #0d1117;
-}
-
-.phase-toggle-btn {
-  font-size: 0.65rem;
-  font-weight: 500;
-  text-transform: none;
-  letter-spacing: 0;
-  padding: 3px 10px;
-  border-radius: 6px;
-  border: 1px solid #e2e8f0;
-  background: #fff;
-  color: #475569;
-  cursor: pointer;
-  transition: all 0.15s;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-}
-.phase-toggle-btn:hover {
-  background: #f1f5f9;
-  border-color: #cbd5e1;
-}
-body.dark .phase-toggle-btn {
-  background: #21262d;
-  color: #e6edf3;
-  border-color: #30363d;
-}
-body.dark .phase-toggle-btn:hover {
-  background: #30363d;
-}
-
-/* Phase panel description */
-.phase-description {
-  font-size: 0.8rem;
-  color: #64748b;
-  text-align: left;
-  margin-bottom: 0.75rem;
-  line-height: 1.5;
-  max-width: 540px;
-}
-body.dark .phase-description {
-  color: #8b949e;
-}
-
-/* Phase panel steps */
-.phase-steps {
-  list-style: none;
-  counter-reset: step;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.phase-step {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  font-size: 0.8rem;
-  color: #475569;
-  counter-increment: step;
-  padding: 4px 8px;
-  border-radius: 6px;
-  transition: background-color 0.3s, color 0.3s;
-}
-.phase-step::before {
-  content: counter(step) ".";
-  font-weight: 600;
-  font-size: 0.7rem;
-  color: #94a3b8;
-  min-width: 1.2em;
-}
-.phase-step-text {
-  font-weight: 500;
-}
-.phase-step-detail {
-  font-size: 0.7rem;
-  color: #94a3b8;
-  font-family: ui-monospace, monospace;
-}
-.phase-step.active {
-  background: #175DDC10;
-  color: #175DDC;
-}
-.phase-step.active::before {
-  color: #175DDC;
-}
-.phase-step.done {
-  color: #10b981;
-}
-.phase-step.done::before {
-  color: #10b981;
-}
-body.dark .phase-step {
-  color: #e6edf3;
-}
-body.dark .phase-step::before {
-  color: #8b949e;
-}
-body.dark .phase-step-detail {
-  color: #8b949e;
-}
-body.dark .phase-step.active {
-  background: #175DDC20;
-  color: #58a6ff;
-}
-body.dark .phase-step.active::before {
-  color: #58a6ff;
-}
-body.dark .phase-step.done {
-  color: #3fb950;
-}
-body.dark .phase-step.done::before {
-  color: #3fb950;
-}
-
-/* Status pill */
-.status-pill {
-  font-size: 0.65rem;
-  line-height: 1.2;
-  padding: 3px 8px;
-  border-radius: 9999px;
-  white-space: nowrap;
-  margin-top: 4px;
-  display: block;
-  text-align: center;
-  min-height: 1em;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  transition: color 0.15s, background-color 0.15s;
-}
-
-/* Ghost node inline status text */
-.status-pill-anno {
-  font-size: 0.65rem;
-  font-weight: 500;
-  line-height: 1;
-  white-space: nowrap;
-  transition: color 0.15s;
-}
-
-/* SVG overlay */
-.svg-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  pointer-events: none;
-  overflow: visible;
-}
-
-/* Tooltip */
-.flow-tooltip {
-  position: absolute;
-  pointer-events: none;
-  z-index: 50;
-  white-space: nowrap;
-  font-size: 0.8rem;
-  font-weight: 500;
-  padding: 4px 12px;
-  border-radius: 8px;
-  opacity: 0;
-  transform: translateY(4px);
-}
-
-/* Slide-out wrapper (header + card) */
-.flow-slideout-wrapper {
-  position: absolute;
-  pointer-events: none;
-  z-index: 40;
-  opacity: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.flow-slideout-header {
-  font-size: 0.6rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  padding-left: 2px;
-  opacity: 0.7;
-}
-
-/* Slide-out card */
-.flow-slideout {
-  white-space: nowrap;
-  font-size: 0.75rem;
-  font-weight: 500;
-  padding: 8px 14px;
-  border-radius: 10px;
-  display: flex;
-  align-items: flex-start;
-  gap: 6px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-.flow-slideout-text {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-}
-
-.flow-slideout-time {
-  font-size: 0.6rem;
-  font-weight: 400;
-  opacity: 0.55;
 }

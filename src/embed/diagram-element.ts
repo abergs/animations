@@ -48,13 +48,24 @@ function applyDevStyles(shadow: ShadowRoot): ReturnType<typeof setInterval> {
  *     - dark: dark theme
  *     - auto: follows prefers-color-scheme media query
  *
+ *   paused — boolean attribute, starts the diagram paused instead of autoplaying
+ *
+ *   at="<label|time>" — seek to a named label or numeric time (seconds)
+ *     - e.g. at="phase2" or at="3.5"
+ *     - implies paused
+ *
+ *   progress="0..1" — seek to a fraction of the total timeline duration
+ *     - e.g. progress="0.5" for halfway through
+ *     - implies paused
+ *
  * Usage:
  *   defineDiagram('bw-diagram-handshake', handshakeFn)
  *   <bw-diagram-handshake mode="auto"></bw-diagram-handshake>
+ *   <bw-diagram-handshake paused at="phase2"></bw-diagram-handshake>
  */
 export function defineDiagram(tagName: string, diagramFn: DiagramFn) {
   class DiagramElement extends HTMLElement {
-    static observedAttributes = ["mode"];
+    static observedAttributes = ["mode", "paused", "at", "progress"];
 
     /** The GSAP master timeline — exposed so <bw-playback> can control it */
     timeline: gsap.core.Timeline | null = null;
@@ -102,6 +113,15 @@ export function defineDiagram(tagName: string, diagramFn: DiagramFn) {
       diagramFn(this.container, (tl, snapshot) => {
         this.timeline = tl;
         this.snapshot = snapshot;
+
+        // Apply initial playback attributes (progress takes precedence over at)
+        if (this.hasAttribute("progress")) {
+          this.applyProgress();
+        } else {
+          this.applyAt();
+        }
+        this.applyPaused();
+
         this.dispatchEvent(new CustomEvent("ready", { bubbles: true }));
       });
     }
@@ -125,7 +145,51 @@ export function defineDiagram(tagName: string, diagramFn: DiagramFn) {
     attributeChangedCallback(name: string, _old: string | null, value: string | null) {
       if (name === "mode") {
         this.applyMode(value || "light");
+      } else if (name === "at") {
+        this.applyAt();
+      } else if (name === "progress") {
+        this.applyProgress();
+      } else if (name === "paused") {
+        this.applyPaused();
       }
+    }
+
+    /** Pause or play based on the `paused` attribute (and `at`/`progress`, which imply paused). */
+    private applyPaused() {
+      if (!this.timeline) return;
+      if (this.hasAttribute("paused") || this.hasAttribute("at") || this.hasAttribute("progress")) {
+        this.timeline.pause();
+      } else if (this.timeline.paused()) {
+        this.timeline.play();
+      }
+    }
+
+    /** Seek to a fraction (0–1) of a single iteration of the timeline. */
+    private applyProgress() {
+      if (!this.timeline) return;
+      const raw = this.getAttribute("progress");
+      if (raw == null) return;
+      const p = Math.max(0, Math.min(1, Number(raw)));
+      if (isNaN(p)) return;
+      // Use the single-iteration duration (not totalDuration which is infinite for repeat:-1)
+      const time = p * this.timeline.duration();
+      this.timeline.seek(time, false);
+      this.timeline.pause();
+    }
+
+    /** Seek to a named label or numeric time (seconds). */
+    private applyAt() {
+      if (!this.timeline) return;
+      const at = this.getAttribute("at");
+      if (at == null) return;
+
+      const num = Number(at);
+      if (!isNaN(num)) {
+        this.timeline.seek(num, false);
+      } else {
+        this.timeline.seek(at, false);
+      }
+      this.timeline.pause();
     }
 
     private applyMode(mode: string) {

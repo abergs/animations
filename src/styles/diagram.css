@@ -1,0 +1,256 @@
+/*
+ * Shared diagram component styles.
+ * Imported by both styles.css (site) and embed-styles.css (embed bundles).
+ * If you edit styles here, both contexts pick them up automatically.
+ */
+
+/* Base node card styling */
+.flow-node {
+  transition: box-shadow 0.3s, border-color 0.3s, background-color 0.4s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.06);
+}
+
+/* Playback controls */
+.playback-controls {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 1.5rem;
+}
+.playback-btn {
+  padding: 5px 14px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  color: #475569;
+  transition: all 0.15s;
+}
+.playback-btn:hover {
+  background: #f1f5f9;
+}
+/* Button group (play + reset) */
+.playback-btn-group {
+  display: flex;
+}
+.playback-btn-group .playback-btn-left {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  border-right: none;
+}
+.playback-btn-group .playback-btn-left.active {
+  border-right: none;
+}
+.playback-btn-group .playback-btn-right {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  padding-left: 8px;
+  padding-right: 8px;
+  border-left: 1px solid #e2e8f0;
+}
+.playback-btn-group .playback-btn-left.active + .playback-btn-right {
+  background: #175DDC;
+  color: #fff;
+  border-color: #175DDC;
+  border-left-color: #1249b3;
+}
+.playback-btn-group .playback-btn-left.active + .playback-btn-right:hover {
+  background: #1249b3;
+}
+.playback-btn.active {
+  background: #175DDC;
+  color: #fff;
+  border-color: #175DDC;
+}
+
+/* Phase label bar */
+.phase-label-bar {
+  position: absolute;
+  top: -0.75rem;
+  left: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+  background: #fff;
+  z-index: 1;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.phase-toggle-btn {
+  font-size: 0.65rem;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+  padding: 3px 10px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.15s;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+.phase-toggle-btn:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+/* Phase panel description */
+.phase-description {
+  font-size: 0.8rem;
+  color: #64748b;
+  text-align: left;
+  margin-bottom: 0.75rem;
+  line-height: 1.5;
+  max-width: 540px;
+}
+
+/* Phase panel steps */
+.phase-steps {
+  list-style: none;
+  counter-reset: step;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.phase-step {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: #475569;
+  counter-increment: step;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: background-color 0.3s, color 0.3s;
+}
+.phase-step::before {
+  content: counter(step) ".";
+  font-weight: 600;
+  font-size: 0.7rem;
+  color: #94a3b8;
+  min-width: 1.2em;
+}
+.phase-step-text {
+  font-weight: 500;
+}
+.phase-step-detail {
+  font-size: 0.7rem;
+  color: #94a3b8;
+  font-family: ui-monospace, monospace;
+}
+.phase-step.active {
+  background: #175DDC10;
+  color: #175DDC;
+}
+.phase-step.active::before {
+  color: #175DDC;
+}
+.phase-step.done {
+  color: #10b981;
+}
+.phase-step.done::before {
+  color: #10b981;
+}
+
+/* Status pill */
+.status-pill {
+  font-size: 0.65rem;
+  line-height: 1.2;
+  padding: 3px 8px;
+  border-radius: 9999px;
+  white-space: nowrap;
+  margin-top: 4px;
+  display: block;
+  text-align: center;
+  min-height: 1em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color 0.15s, background-color 0.15s;
+}
+
+/* Ghost node inline status text */
+.status-pill-anno {
+  font-size: 0.65rem;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  transition: color 0.15s;
+}
+
+/* SVG overlay */
+.svg-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  overflow: visible;
+}
+
+/* Tooltip */
+.flow-tooltip {
+  position: absolute;
+  pointer-events: none;
+  z-index: 50;
+  white-space: nowrap;
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 4px 12px;
+  border-radius: 8px;
+  opacity: 0;
+  transform: translateY(4px);
+}
+
+/* Slide-out wrapper (header + card) */
+.flow-slideout-wrapper {
+  position: absolute;
+  pointer-events: none;
+  z-index: 40;
+  opacity: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.flow-slideout-header {
+  font-size: 0.6rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding-left: 2px;
+  opacity: 0.7;
+}
+
+/* Slide-out card */
+.flow-slideout {
+  white-space: nowrap;
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 8px 14px;
+  border-radius: 10px;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.flow-slideout-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.flow-slideout-time {
+  font-size: 0.6rem;
+  font-weight: 400;
+  opacity: 0.55;
+}

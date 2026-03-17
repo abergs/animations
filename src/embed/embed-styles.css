@@ -1,0 +1,8 @@
+@import "tailwindcss";
+@import "../styles/diagram.css";
+@import "../styles/diagram-dark.css";
+
+/* Embed-specific: dark mode on the container wrapper */
+.dark {
+  color: #e6edf3;
+}

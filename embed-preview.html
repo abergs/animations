@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>body { margin: 0; font-family: 'Inter', system-ui, -apple-system, sans-serif; }</style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div id="root"></div>
+  <script type="module">
+    // Read params from URL hash: #diagram=agent-access&mode=dark
+    const params = new URLSearchParams(window.location.hash.slice(1));
+    const diagram = params.get('diagram');
+    const mode = params.get('mode') || 'light';
+
+    if (!diagram) {
+      document.getElementById('root').textContent = 'Missing ?diagram= parameter';
+    } else {
+      const isDark = mode === 'dark' || (mode === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+      document.body.style.background = isDark ? '#0d1117' : '#ffffff';
+
+      // Dynamically import the embed entry — works with Vite dev server
+      await import(`/src/embed/${diagram}.ts`);
+
+      const root = document.getElementById('root');
+      const tagName = `bw-diagram-${diagram}`;
+      const paused = params.has('paused');
+      const at = params.get('at');
+      const progress = params.get('progress');
+
+      const playback = document.createElement('bw-playback');
+      playback.setAttribute('for', 'demo');
+      playback.setAttribute('mode', mode);
+      playback.setAttribute('labels', '');
+      root.appendChild(playback);
+
+      const el = document.createElement(tagName);
+      el.id = 'demo';
+      el.setAttribute('mode', mode);
+      if (paused || at || progress) el.setAttribute('paused', '');
+      if (progress) el.setAttribute('progress', progress);
+      else if (at) el.setAttribute('at', at);
+      root.appendChild(el);
+    }
+  </script>
+</body>
+</html>
