@@ -1,6 +1,7 @@
 import "./styles.css";
 import { agentAccess } from "./diagrams/agent-access";
 import { agentAccessArch } from "./diagrams/agent-access-arch";
+import { handshake } from "./diagrams/handshake";
 import { createPlaybackControls } from "./components/playback";
 
 // Dark mode: read from URL and persist via query param
@@ -42,6 +43,12 @@ const container = document.getElementById("app")!;
 
 if (diagram === "arch") {
   agentAccessArch(container, (tl, trailState) => {
+    const controls = createPlaybackControls(tl, { trailState });
+    controls.style.margin = "0";
+    controlsSlot.replaceWith(controls);
+  });
+} else if (diagram === "handshake") {
+  handshake(container, (tl, trailState) => {
     const controls = createPlaybackControls(tl, { trailState });
     controls.style.margin = "0";
     controlsSlot.replaceWith(controls);

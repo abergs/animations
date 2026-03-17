@@ -216,6 +216,139 @@ body.dark .viewfinder-size {
   color: #58a6ff;
 }
 
+/* Phase label bar */
+.phase-label-bar {
+  position: absolute;
+  top: -0.75rem;
+  left: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+  background: #fff;
+  z-index: 1;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+body.dark .phase-label-bar {
+  background: #0d1117;
+}
+
+.phase-toggle-btn {
+  font-size: 0.65rem;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+  padding: 3px 10px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.15s;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+.phase-toggle-btn:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+body.dark .phase-toggle-btn {
+  background: #21262d;
+  color: #e6edf3;
+  border-color: #30363d;
+}
+body.dark .phase-toggle-btn:hover {
+  background: #30363d;
+}
+
+/* Phase panel description */
+.phase-description {
+  font-size: 0.8rem;
+  color: #64748b;
+  text-align: left;
+  margin-bottom: 0.75rem;
+  line-height: 1.5;
+  max-width: 540px;
+}
+body.dark .phase-description {
+  color: #8b949e;
+}
+
+/* Phase panel steps */
+.phase-steps {
+  list-style: none;
+  counter-reset: step;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.phase-step {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: #475569;
+  counter-increment: step;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: background-color 0.3s, color 0.3s;
+}
+.phase-step::before {
+  content: counter(step) ".";
+  font-weight: 600;
+  font-size: 0.7rem;
+  color: #94a3b8;
+  min-width: 1.2em;
+}
+.phase-step-text {
+  font-weight: 500;
+}
+.phase-step-detail {
+  font-size: 0.7rem;
+  color: #94a3b8;
+  font-family: ui-monospace, monospace;
+}
+.phase-step.active {
+  background: #175DDC10;
+  color: #175DDC;
+}
+.phase-step.active::before {
+  color: #175DDC;
+}
+.phase-step.done {
+  color: #10b981;
+}
+.phase-step.done::before {
+  color: #10b981;
+}
+body.dark .phase-step {
+  color: #e6edf3;
+}
+body.dark .phase-step::before {
+  color: #8b949e;
+}
+body.dark .phase-step-detail {
+  color: #8b949e;
+}
+body.dark .phase-step.active {
+  background: #175DDC20;
+  color: #58a6ff;
+}
+body.dark .phase-step.active::before {
+  color: #58a6ff;
+}
+body.dark .phase-step.done {
+  color: #3fb950;
+}
+body.dark .phase-step.done::before {
+  color: #3fb950;
+}
+
 /* Status pill */
 .status-pill {
   font-size: 0.65rem;
