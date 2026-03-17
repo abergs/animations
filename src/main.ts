@@ -1,13 +1,14 @@
 import "./styles.css";
 import { createPlaybackControls } from "./components/playback";
+import type { Snapshot } from "./animations/snapshot";
 
 // Auto-discover all diagram modules
-const modules = import.meta.glob<{ default: (container: HTMLElement, onReady?: (tl: gsap.core.Timeline, snapshot: any) => void) => void }>("./diagrams/*.ts");
+const modules = import.meta.glob<{ default: (container: HTMLElement, onReady?: (tl: gsap.core.Timeline, snapshot: Snapshot) => void) => void }>("./diagrams/*.ts");
 
 // Extract route names from file paths: "./diagrams/handshake.ts" → "handshake"
 const routes = Object.fromEntries(
   Object.entries(modules).map(([path, loader]) => {
-    const name = path.replace("./diagrams/", "").replace(".ts", "");
+    const name = path.split("/").pop()!.replace(/\.ts$/, "");
     return [name, loader];
   })
 );
@@ -36,12 +37,6 @@ darkToggle.addEventListener("click", () => {
   window.history.replaceState(null, "", url.toString());
 });
 
-// Playback controls placeholder — will be wired when timeline is ready
-const controlsSlot = document.createElement("div");
-controlsSlot.className = "playback-controls";
-controlsSlot.style.margin = "0";
-
-toolbar.appendChild(controlsSlot);
 toolbar.appendChild(darkToggle);
 document.body.prepend(toolbar);
 
@@ -49,15 +44,21 @@ document.body.prepend(toolbar);
 const container = document.getElementById("app")!;
 const routeName = window.location.pathname.replace(/^\//, "").replace(/\/$/, "");
 
-function onReady(tl: gsap.core.Timeline, snapshot: any) {
-  const controls = createPlaybackControls(tl, { snapshot });
-  controls.style.margin = "0";
-  controlsSlot.replaceWith(controls);
-}
-
 if (routeName && routes[routeName]) {
-  // Load the matched diagram
-  routes[routeName]().then((mod) => mod.default(container, onReady));
+  // Add playback controls slot to toolbar for diagram pages
+  const controlsSlot = document.createElement("div");
+  controlsSlot.className = "playback-controls";
+  controlsSlot.style.margin = "0";
+  toolbar.prepend(controlsSlot);
+
+  const formatLabel = (s: string) => s.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+  document.title = `${formatLabel(routeName)} — Diagram Animations`;
+
+  routes[routeName]().then((mod) => mod.default(container, (tl: gsap.core.Timeline, snapshot: Snapshot) => {
+    const controls = createPlaybackControls(tl, { snapshot });
+    controls.style.margin = "0";
+    controlsSlot.replaceWith(controls);
+  }));
 } else if (!routeName) {
   // Index page
   container.innerHTML = `
@@ -114,6 +115,7 @@ if (routeName && routes[routeName]) {
   }
 } else {
   // Unknown route
+  document.title = "Not Found — Diagram Animations";
   container.innerHTML = `
     <div style="max-width: 640px; margin: 0 auto; padding-top: 6rem; text-align: center;">
       <p style="font-size: 4rem; margin-bottom: 0.5rem; opacity: 0.15;">?</p>
@@ -123,8 +125,8 @@ if (routeName && routes[routeName]) {
       </p>
       <p style="font-size: 0.9rem; margin-bottom: 2rem;"
          class="text-slate-500 dark:text-slate-400">
-        No diagram called <code style="padding: 2px 6px; border-radius: 4px; background: #f1f5f9; font-size: 0.85rem;"
-        class="dark:bg-slate-800">"${routeName}"</code>
+        No diagram called <code id="route-code" style="padding: 2px 6px; border-radius: 4px; background: #f1f5f9; font-size: 0.85rem;"
+        class="dark:bg-slate-800"></code>
       </p>
       <a href="/" style="font-size: 0.9rem; text-decoration: none; font-weight: 500;"
          class="text-blue-600 dark:text-blue-400 hover:underline">
@@ -132,4 +134,5 @@ if (routeName && routes[routeName]) {
       </a>
     </div>
   `;
+  container.querySelector("#route-code")!.textContent = `"${routeName}"`;
 }
