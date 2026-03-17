@@ -2,6 +2,10 @@
   "name": "gsap-fw",
   "private": true,
   "type": "module",
+  "packageManager": "bun@1.3.1",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build"
