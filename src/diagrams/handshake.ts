@@ -265,7 +265,36 @@ export function handshake(
     const purple = "#8b5cf6";
     const amber = "#f59e0b";
 
+    /** Add a replay button to a phase panel's label bar */
+    function addReplayBtn(panel: HTMLElement, phaseLabel: string) {
+      const labelBar = panel.querySelector('.phase-label-bar');
+      if (!labelBar) return;
+      const btn = document.createElement('button');
+      btn.className = 'phase-toggle-btn';
+      btn.textContent = '▶ Replay';
+      btn.addEventListener('click', () => {
+        snap.restoreNow();
+        const start = tl.labels[phaseLabel] || 0;
+        const end = tl.labels[phaseLabel + '_end'];
+        tl.pause();
+        tl.seek(start);
+        tl.play();
+        if (end != null) {
+          // Pause when this phase ends
+          const pauseAt = () => {
+            if (tl.time() >= end) {
+              tl.pause();
+              tl.eventCallback('onUpdate', null);
+            }
+          };
+          tl.eventCallback('onUpdate', pauseAt);
+        }
+      });
+      labelBar.appendChild(btn);
+    }
+
     // ──── PHASE 1: AUTHENTICATE ────
+    tl.addLabel('phase1');
 
     // 1. Both devices connect
     step(tl, p1Steps[0], 'active');
@@ -313,9 +342,11 @@ export function handshake(
     step(tl, p1Steps[4], 'active');
     tl.to({}, { duration: 0.4 });
     step(tl, p1Steps[4], 'done');
+    tl.addLabel('phase1_end');
     tl.to({}, { duration: phasePause });
 
     // ──── PHASE 2: DISCOVER (Rendezvous flow) ────
+    tl.addLabel('phase2');
 
     // 1. User device requests rendezvous code
     step(tl, p2Steps[0], 'active');
@@ -369,9 +400,11 @@ export function handshake(
     step(tl, p2Steps[6], 'active');
     tl.to({}, { duration: 0.4 });
     step(tl, p2Steps[6], 'done');
+    tl.addLabel('phase2_end');
     tl.to({}, { duration: phasePause });
 
     // ──── PHASE 3: ENCRYPT ────
+    tl.addLabel('phase3');
 
     // 1. Noise msg1 (Remote → Proxy → User)
     step(tl, p3Steps[0], 'active');
@@ -413,9 +446,11 @@ export function handshake(
     step(tl, p3Steps[4], 'active');
     tl.to({}, { duration: 0.4 });
     step(tl, p3Steps[4], 'done');
+    tl.addLabel('phase3_end');
     tl.to({}, { duration: phasePause });
 
     // ──── PHASE 4: CREDENTIAL EXCHANGE ────
+    tl.addLabel('phase4');
 
     // 1. Remote sends encrypted credential request
     step(tl, p4Steps[0], 'active');
@@ -473,11 +508,19 @@ export function handshake(
     step(tl, p4Steps[6], 'active');
     tl.to({}, { duration: 0.4 });
     step(tl, p4Steps[6], 'done');
+    tl.addLabel('phase4_end');
 
     tl.to({}, { duration: 3 });
 
     // Reset everything before next loop
     snap.reset(tl);
+
+    // Add replay buttons to each phase
+    addReplayBtn(phase1, 'phase1');
+    addReplayBtn(phase2Rendezvous, 'phase2');
+    addReplayBtn(phase2Psk, 'phase2');
+    addReplayBtn(phase3, 'phase3');
+    addReplayBtn(phase4, 'phase4');
 
     tl.play();
     if (onReady) onReady(tl, snap);

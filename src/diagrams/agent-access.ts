@@ -52,7 +52,10 @@ const icons = {
   ),
 };
 
-export function agentAccess(container: HTMLElement) {
+export default function agentAccess(
+  container: HTMLElement,
+  onReady?: (tl: gsap.core.Timeline, snapshot: import("../animations/snapshot").Snapshot) => void,
+) {
   // --- Create nodes ---
 
   const claude = cn("Claude", {
