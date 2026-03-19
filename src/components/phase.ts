@@ -23,6 +23,10 @@ export function createPhasePanel(
   el.className = 'phase-panel relative rounded-2xl border-2 border-dashed pt-8 pb-6 px-12'
   el.style.borderColor = opts.borderColor || '#cbd5e1'
 
+  // Slug for targeting (e.g. "Phase 1 — Authenticate" → "authenticate")
+  const slug = label.replace(/^.*?—\s*/, '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-')
+  el.dataset.phase = slug
+
   // Group label bar (can hold label + extra buttons)
   const labelBar = document.createElement('div')
   labelBar.className = 'phase-label-bar'

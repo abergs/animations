@@ -101,7 +101,7 @@ export default function agentAccess(
     statusColor: "#94a3b8",
   });
 
-  const bw = cn("Bitwarden", {
+  const bw = cn("Password Manager", {
     icon: icons.shield,
     iconBg: "#e8f0fe",
     subtitle: "Running on your device",

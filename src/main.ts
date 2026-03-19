@@ -220,7 +220,10 @@ if (embedDiagram && routes[embedDiagram]) {
 
   routes[routeName]().then((mod) => mod.default(container, (tl: gsap.core.Timeline, snapshot: Snapshot) => {
     // Expose timeline + snapshot for automated capture (Playwright)
+    // Pause immediately so no callbacks fire before the capture script takes control
     if (params.has('capture')) {
+      tl.pause();
+      tl.seek(0, true);
       (window as any).__capture = { timeline: tl, snapshot };
     }
 
